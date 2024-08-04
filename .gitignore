@@ -58,7 +58,11 @@ cover/
 # Django stuff:
 *.log
 local_settings.py
+<<<<<<< HEAD
 QuickHub_profile_servise/db.sqlite3
+=======
+db.sqlite3
+>>>>>>> cb365e0f86d86bb6e6352a6bdb7a045d516bb610
 db.sqlite3-journal
 
 # Flask stuff:
@@ -153,5 +157,4 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
-
 .idea/
