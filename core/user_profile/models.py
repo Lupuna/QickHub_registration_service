@@ -2,6 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import RegexValidator, MaxValueValidator
 from django.db import models
+import uuid
 
 
 class User(AbstractUser):
@@ -13,9 +14,11 @@ class User(AbstractUser):
         ],
         blank=True,
     )
-    image = models.UUIDField(
-        blank=True, null=True,
-        help_text=_('uuid field for image')
+    image_identifier = models.UUIDField(
+        default=uuid.uuid4(),
+        editable=False,
+        unique=True,
+        help_text=_('uuid for image')
     )
     city = models.CharField(max_length=255, blank=True)
     birthday = models.DateField(blank=True, null=True, )
