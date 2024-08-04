@@ -1,4 +1,4 @@
-FROM python:3.12-alpine3.16
+FROM python:3.12-alpine3.20
 
 COPY requirements.txt /temp/requirements.txt
 COPY core /core
