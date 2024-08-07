@@ -1,8 +1,6 @@
-import uuid
 from django.core.exceptions import ValidationError
 from .test_base import Settings
 from django.utils.translation import gettext_lazy as _
-from user_profile.models import User, Customization, Link
 
 
 class TestUser(Settings):
