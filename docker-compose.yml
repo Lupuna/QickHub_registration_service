@@ -7,8 +7,6 @@ x-worker-template: &worker-template
   command: -A celery_app.app worker --loglevel=info
   volumes:
     - ./core:/core
-  links:
-    - redis
   depends_on:
     - redis
     - database
@@ -42,6 +40,8 @@ services:
       - POSTGRES_DB=dbname
       - POSTGRES_USER=dbuser
       - POSTGRES_PASSWORD=password
+    volumes:
+      - db_data:/var/lib/postgresql/data
 
   redis:
     image: redis:7.0.5-alpine
@@ -74,3 +74,6 @@ services:
       - redis
     ports:
       - "5555:5555"
+
+volumes:
+  db_data:
