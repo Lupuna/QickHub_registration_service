@@ -1,8 +1,10 @@
 import os
+import sys
 from datetime import timedelta
 from pathlib import Path
+from loguru import logger
+from core.loguru_handler import InterceptHandler
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -152,3 +154,28 @@ CACHES = {
     }
 }
 CELERY_BROKER_URL = 'redis://redis:6379/0'
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'intercept': {
+            '()': InterceptHandler,
+            'level': 0,
+        },
+    },
+    'loggers': {
+        '': {
+            'handlers': ['intercept'],
+            'level': "ERROR",
+            'propagate': True,
+        },
+    }
+}
+
+logger.remove()
+logger.add(sys.stdout, level="DEBUG", backtrace=True)
+logger.add("logs/debug.log", level="DEBUG", rotation="30 MB", backtrace=True, retention="1 days")
+logger.add("logs/info.log", level="DEBUG", rotation="30 MB", backtrace=True, retention="3 days")
+logger.add("logs/error.log", level="ERROR", rotation="30 MB", backtrace=True, retention="7 days")
+

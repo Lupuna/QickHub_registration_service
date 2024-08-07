@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from user_profile.models import User, Customization
+from loguru import logger
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -8,9 +9,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = (
-            'id', 'username', 'email', 'password', 'password2'
-        )
+        fields = ('id', 'username', 'email', 'password', 'password2')
 
     def validate(self, attrs):
         data = super().validate(attrs)

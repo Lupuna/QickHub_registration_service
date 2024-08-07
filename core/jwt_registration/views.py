@@ -3,8 +3,10 @@ from rest_framework.exceptions import ValidationError, AuthenticationFailed
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
+from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 from jwt_registration.serializers import UserSerializer
+from loguru import logger
 
 
 class RegistrationAPIView(APIView):
@@ -49,3 +51,18 @@ class LoginAPIView(APIView):
             'refresh': str(refresh),
             'access': str(refresh.access_token),
         }, status=status.HTTP_200_OK)
+
+
+class LogoutAPIView(APIView):
+
+    def post(self, request):
+        try:
+            refresh_token = request.data.get('refresh')
+            if not refresh_token:
+                raise ValidationError({'error': 'Refresh token is required'})
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+            return Response({'detail': 'Successfully logged out'}, status=status.HTTP_205_RESET_CONTENT)
+        except TokenError as e:
+            logger.info(f"{e} it's strange situation")
+            raise ValidationError({'error': 'Invalid or expired token'})
