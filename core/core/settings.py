@@ -4,6 +4,7 @@ from datetime import timedelta
 from pathlib import Path
 from loguru import logger
 from core.loguru_handler import InterceptHandler
+import socket
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -33,6 +34,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
+    'debug_toolbar',
 
     'user_profile.apps.UserProfileConfig',
     'jwt_registration.apps.JwtRegistrationConfig',
@@ -46,6 +48,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
 ]
 
 ROOT_URLCONF = 'core.urls'
@@ -126,6 +130,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'user_profile.User'
 
+STATIC_URL = "static/"
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -178,4 +184,11 @@ logger.add(sys.stdout, level="DEBUG", backtrace=True)
 logger.add("logs/debug.log", level="DEBUG", rotation="30 MB", backtrace=True, retention="1 days")
 logger.add("logs/info.log", level="DEBUG", rotation="30 MB", backtrace=True, retention="3 days")
 logger.add("logs/error.log", level="ERROR", rotation="30 MB", backtrace=True, retention="7 days")
+
+INTERNAL_IPS = [
+    "127.0.0.1",
+]
+
+hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
+INTERNAL_IPS += [".".join(ip.split(".")[:-1] + ["1"]) for ip in ips]
 

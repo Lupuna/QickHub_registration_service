@@ -8,24 +8,27 @@ class LinkSerializer(serializers.ModelSerializer):
     class Meta:
         model = Link
         fields = ('id', 'title', 'link')
+        read_only_fields = ('id', )
 
 
 class CustomizationSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Customization
         fields = ('id', 'color_scheme', 'font_size')
+        read_only_fields = ('id',)
 
 
 class ProfileUserSerializer(serializers.ModelSerializer):
     image_identifier = serializers.CharField(read_only=True)
     links = LinkSerializer(many=True, required=False)
     customization = CustomizationSerializer(required=False)
+    email = serializers.CharField(read_only=True)
+    username = serializers.CharField(read_only=True)
 
     class Meta:
         model = User
         fields = (
-            'id', 'image_identifier',
+            'id', 'image_identifier', 'email', 'username',
             'phone', 'city', 'birthday',
             'links', 'customization'
         )
@@ -41,15 +44,16 @@ class ProfileUserSerializer(serializers.ModelSerializer):
         instance.birthday = validated_data.get('birthday', instance.birthday)
         instance.save()
 
-        customization = instance.customization
-        for attr, value in customization_data.items():
-            setattr(customization, attr, value)
-        customization.save()
+        if customization_data:
+            customization = instance.customization
+            for attr, value in customization_data.items():
+                setattr(customization, attr, value)
+            customization.save()
 
-        instance.links.clear()
+        links_title = instance.links.all().values_list('title', flat=True)
         for link_data in links_data:
-            Link.objects.create(user=instance, **link_data)
-
-        instance.customization.clear()
-        Customization.objects.create(user=instance, **customization_data)
+            if link_data['title'] in links_title:
+                Link.objects.filter(title=link_data['title']).update(**link_data)
+            else:
+                Link.objects.create(user=instance, **link_data)
         return instance
