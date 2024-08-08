@@ -22,8 +22,6 @@ class ProfileUserSerializer(serializers.ModelSerializer):
     image_identifier = serializers.CharField(read_only=True)
     links = LinkSerializer(many=True, required=False)
     customization = CustomizationSerializer(required=False)
-    email = serializers.CharField(read_only=True)
-    username = serializers.CharField(read_only=True)
 
     class Meta:
         model = User
@@ -32,6 +30,7 @@ class ProfileUserSerializer(serializers.ModelSerializer):
             'phone', 'city', 'birthday',
             'links', 'customization'
         )
+        read_only_fields = ('id', 'email', 'username')
 
     def create(self, validated_data):
         raise MethodNotAllowed('POST', detail='Creation is not allowed using this serializer.')
