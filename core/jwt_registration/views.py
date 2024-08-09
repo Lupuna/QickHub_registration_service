@@ -4,10 +4,9 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from rest_framework.views import APIView
-from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 from jwt_registration.serializers import UserSerializer
-from loguru import logger
+from jwt_registration.utils import put_token_on_blacklist
 
 
 class RegistrationAPIView(APIView):
@@ -55,17 +54,42 @@ class LoginAPIView(APIView):
 
 
 class LogoutAPIView(APIView):
-
-    permission_classes = (IsAuthenticated, )
+    permission_classes = (IsAuthenticated,)
 
     def post(self, request):
-        try:
-            refresh_token = request.data.get('refresh')
-            if not refresh_token:
-                raise ValidationError({'error': 'Refresh token is required'})
-            token = RefreshToken(refresh_token)
-            token.blacklist()
-            return Response({'detail': 'Successfully logged out'}, status=status.HTTP_205_RESET_CONTENT)
-        except TokenError as e:
-            logger.info(f"{e} it's strange situation")
-            raise ValidationError({'error': 'Invalid or expired token'})
+        refresh_token = request.data.get('refresh')
+        if not refresh_token: raise ValidationError({'error': 'Refresh token is required'})
+        put_token_on_blacklist(refresh_token)
+        return Response({'detail': 'Successfully logged out'}, status=status.HTTP_205_RESET_CONTENT)
+
+
+class UpdateImportantDataAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def patch(self, request):
+        data_to_update = request.data.get('data_to_update')
+        old_refresh_token = request.data.get("refresh_token")
+        current_password = request.data.get('password')
+        self._validate_update_request(current_password, data_to_update, old_refresh_token, request)
+        serializer = UserSerializer(instance=request.user, data=data_to_update, partial=True)
+        if serializer.is_valid():
+            put_token_on_blacklist(old_refresh_token)
+            user = serializer.save()
+            refresh = RefreshToken.for_user(user)
+            return Response({
+                'refresh': str(refresh),
+                'access': str(refresh.access_token)
+            }, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @staticmethod
+    def _validate_update_request(current_password, data_to_update, old_refresh_token, request):
+        if not data_to_update:
+            raise ValidationError({'error': 'data_to_update is required'})
+        if not old_refresh_token:
+            raise ValidationError({'error': 'Refresh token is required'})
+        if not current_password:
+            raise ValidationError({'error': 'Current password is required'})
+        if not request.user.check_password(current_password):
+            raise ValidationError({'error': 'Current password is incorrect'})

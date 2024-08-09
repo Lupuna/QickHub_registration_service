@@ -22,3 +22,6 @@ class TestUrls(SimpleTestCase):
         url = reverse('token_refresh')
         self.assertEqual(resolve(url).func.view_class, TokenRefreshView)
 
+    def test_update_important_data_url_is_resolve(self):
+        url = reverse('update_important_data')
+        self.assertEqual(resolve(url).func.view_class, views.UpdateImportantDataAPIView)

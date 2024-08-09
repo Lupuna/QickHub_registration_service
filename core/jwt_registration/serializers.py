@@ -1,10 +1,9 @@
 from rest_framework import serializers
 from user_profile.models import User, Customization
-from loguru import logger
 
 
 class UserSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, style={'input_type': 'password'})
+    password = serializers.CharField(write_only=True, style={'input_type': 'password'}, required=False)
     password2 = serializers.CharField(write_only=True, style={'input_type': 'password'}, required=False)
 
     class Meta:
@@ -20,7 +19,7 @@ class UserSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        validated_data.pop('password2', None)
+        validated_data.pop('password2')
         user = User(
             email=validated_data['email'],
             username=validated_data['username'],
@@ -31,8 +30,9 @@ class UserSerializer(serializers.ModelSerializer):
         return user
 
     def update(self, instance, validated_data):
+        validated_data.pop('password2')
         instance.username = validated_data.get('username', instance.username)
         instance.email = validated_data.get('email', instance.email)
-        instance.set_password(validated_data['password'])
+        if validated_data.get('password'): instance.set_password(validated_data['password'])
         instance.save()
         return instance

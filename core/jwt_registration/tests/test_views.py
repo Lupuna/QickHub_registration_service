@@ -90,3 +90,100 @@ class RegistrationAPITestCase(APITestCase):
         refresh = RefreshToken.for_user(user)
         response = self.client.post(self.logout_url, {'refresh': str(refresh)})
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class UpdateImportantDataAPIViewTestCase(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='good_username', password='password_123')
+        self.url = reverse('update_important_data')
+        self.refresh = RefreshToken.for_user(self.user)
+        self.data = {
+            'data_to_update': {
+                'password': 'password_123',
+                'password2': 'password_123',
+                'username': 'newusername'
+            },
+            'refresh_token': str(self.refresh),
+            'password': 'password_123'
+        }
+
+        self.data_without_data_to_update = {
+            'refresh_token': str(self.refresh),
+            'password': 'password_123'
+        }
+
+        self.data_without_refresh_token = {
+            'data_to_update': {
+                'password': 'password_123',
+                'password2': 'password_123',
+                'username': 'newusername'
+            },
+            'password': 'password_123'
+        }
+
+        self.data_without_password = {
+            'data_to_update': {
+                'password': 'password_123',
+                'password2': 'password_123',
+                'username': 'newusername'
+            },
+            'refresh_token': str(self.refresh),
+        }
+
+        self.data_with_invalid_password = {
+            'data_to_update': {
+                'password': 'password_123',
+                'password2': 'password_123',
+                'username': 'newusername'
+            },
+            'refresh_token': str(self.refresh),
+            'password': 'wrong_password'
+        }
+
+    def test_successful_patch_request(self):
+        client = APIClient()
+        client.force_login(user=self.user)
+        client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.refresh.access_token}')
+        response = client.patch(self.url, self.data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.username, 'newusername')
+        self.assertIn('refresh', response.data)
+        self.assertIn('access', response.data)
+
+    def test_missing_data_to_update(self):
+        client = APIClient()
+        client.force_login(user=self.user)
+        client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.refresh.access_token}')
+        response = client.patch(self.url, self.data_without_data_to_update, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data['error'], 'data_to_update is required')
+
+    def test_missing_refresh_token(self):
+        client = APIClient()
+        client.force_login(user=self.user)
+        client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.refresh.access_token}')
+        response = client.patch(self.url, self.data_without_refresh_token, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data['error'], 'Refresh token is required')
+
+    def test_missing_password(self):
+        client = APIClient()
+        client.force_login(user=self.user)
+        client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.refresh.access_token}')
+        response = client.patch(self.url, self.data_without_password, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data['error'], 'Current password is required')
+
+    def test_invalid_password(self):
+        client = APIClient()
+        client.force_login(user=self.user)
+        client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.refresh.access_token}')
+        response = client.patch(self.url, self.data_with_invalid_password, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data['error'], 'Current password is incorrect')
+
+    def test_not_authenticated(self):
+        client = APIClient()
+        response = client.patch(self.url, self.data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
