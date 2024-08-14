@@ -1,14 +1,15 @@
 from rest_framework import serializers
 from user_profile.models import User, Link, Customization
 from rest_framework.exceptions import MethodNotAllowed
+from PIL import Image
+from io import BytesIO
 
 
 class LinkSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Link
         fields = ('id', 'title', 'link')
-        read_only_fields = ('id', )
+        read_only_fields = ('id',)
 
 
 class CustomizationSerializer(serializers.ModelSerializer):
@@ -26,11 +27,11 @@ class ProfileUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
-            'id', 'image_identifier', 'email', 'username',
+            'id', 'image_identifier',
             'phone', 'city', 'birthday',
             'links', 'customization'
         )
-        read_only_fields = ('id', 'email', 'username')
+        read_only_fields = ('id', 'email')
 
     def create(self, validated_data):
         raise MethodNotAllowed('POST', detail='Creation is not allowed using this serializer.')
@@ -56,3 +57,25 @@ class ProfileUserSerializer(serializers.ModelSerializer):
             else:
                 Link.objects.create(user=instance, **link_data)
         return instance
+
+
+class ImageSerializer(serializers.Serializer):
+    image = serializers.ImageField(required=True, write_only=True)
+    user = serializers.IntegerField(required=True, write_only=True)
+
+    def create(self, validated_data):
+        name, image_file = self.processing_image(validated_data['user'], validated_data['image'])
+        return {'status': True}
+
+    def processing_image(self, user_id: int, image) -> tuple | dict:
+        try:
+            photo_uuid = User.objects.get(id=user_id).image_identifier
+        except User.DoesNotExist as error:
+            raise serializers.ValidationError(error)
+        name = f"{photo_uuid}.webp"
+        image = Image.open(image)
+        image_file = BytesIO()
+        image.save(image_file, format='WEBP')
+        image_file.name = name
+        image_file.seek(0)
+        return name, image_file

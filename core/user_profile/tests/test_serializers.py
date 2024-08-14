@@ -1,7 +1,10 @@
-from rest_framework.exceptions import MethodNotAllowed
+from rest_framework.exceptions import MethodNotAllowed, ValidationError
 from .test_base import Settings
 from user_profile.models import Link
-from user_profile.serializers import LinkSerializer, CustomizationSerializer, ProfileUserSerializer
+from user_profile.serializers import LinkSerializer, CustomizationSerializer, ProfileUserSerializer, ImageSerializer
+from django.core.files.uploadedfile import SimpleUploadedFile
+from PIL import Image
+from io import BytesIO
 
 
 class LinkSerializerTestCase(Settings):
@@ -54,22 +57,19 @@ class ProfileUserSerializerTestCase(Settings):
         self.assertEqual(
             tuple(data.keys()),
             (
-                'id', 'image_identifier', 'email', 'username',
+                'id', 'image_identifier',
                 'phone', 'city', 'birthday',
                 'links', 'customization'
             )
         )
 
     def test_profile_user_serializer_read_only(self):
-        serializer = ProfileUserSerializer(self.user, data={'id': 999, 'username': 'wrong_username', 'email': 'wrong_email@gmail.com'})
+        serializer = ProfileUserSerializer(self.user, data={'id': 999, 'email': 'wrong_email@gmail.com'})
         self.assertTrue(serializer.is_valid())
         updated_user = serializer.save()
         with self.subTest('check id'):
             self.assertEqual(updated_user.id, self.user.id)
             self.assertNotEqual(updated_user.id, 999)
-        with self.subTest('check username'):
-            self.assertEqual(updated_user.username, self.user.username)
-            self.assertNotEqual(updated_user.username, 'wrong_username')
         with self.subTest('check email'):
             self.assertEqual(updated_user.email, self.user.email)
             self.assertNotEqual(updated_user.email, 'wrong_email@gmail.com')
@@ -115,3 +115,46 @@ class ProfileUserSerializerTestCase(Settings):
         updated_customization = updated_user.customization
         self.assertEqual(updated_customization.font_size, 15)
         self.assertEqual(Link.objects.filter(user=self.user).count(), 3)
+
+
+class ImageSerializerTestCase(Settings):
+
+    def test_serializer_valid_data(self):
+        image = self.create_test_image()
+        data = {'user': self.user.id, 'image': image}
+        serializer = ImageSerializer(data=data)
+        self.assertTrue(serializer.is_valid())
+        result = serializer.save()
+        self.assertEqual(result['status'], True)
+
+    def test_serializer_invalid_image(self):
+        data = {'user': self.user.id}
+        serializer = ImageSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('image', serializer.errors)
+
+    def test_processing_image_function_valid(self):
+        image = self.create_test_image()
+        result = ImageSerializer().processing_image(self.user.id, image)
+        self.assertIsInstance(result, tuple)
+        self.assertEqual(len(result), 2)
+        name, image_file = result
+        self.assertEqual(name, f'{self.user.image_identifier}.webp')
+        self.assertEqual(image_file.name, f'{self.user.image_identifier}.webp')
+        image_file.seek(0)
+        processed_image = Image.open(image_file)
+        self.assertEqual(processed_image.format, 'WEBP')
+
+    def test_processing_image_function_invalid_user(self):
+        image = self.create_test_image()
+        with self.assertRaises(ValidationError):
+            ImageSerializer().processing_image(9999, image)
+
+    @staticmethod
+    def create_test_image():
+        file = BytesIO()
+        image = Image.new('RGB', (100, 100))
+        image.save(file, 'JPEG')
+        file.name = 'test.jpeg'
+        file.seek(0)
+        return SimpleUploadedFile('test.jpeg', file.getvalue(), content_type='image/jpeg')

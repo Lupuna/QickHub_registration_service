@@ -2,7 +2,7 @@ from rest_framework import serializers
 from user_profile.models import User, Customization
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UserImportantSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, style={'input_type': 'password'}, required=False)
     password2 = serializers.CharField(write_only=True, style={'input_type': 'password'}, required=False)
 
