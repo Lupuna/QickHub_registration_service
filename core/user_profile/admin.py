@@ -2,6 +2,6 @@ from django.contrib import admin
 from user_profile.models import User, Link, Customization
 
 
-admin.register(User)
-admin.register(Link)
-admin.register(Customization)
+admin.site.register(User)
+admin.site.register(Link)
+admin.site.register(Customization)

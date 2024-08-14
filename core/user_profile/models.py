@@ -13,6 +13,7 @@ class User(AbstractUser):
             RegexValidator('^((8|\+7)[\- ]?)?(\(?\d{3}\)?[\- ]?)?[\d\- ]{7,10}$')
         ],
         blank=True,
+        null=True,
     )
     image_identifier = models.UUIDField(
         default=uuid.uuid4(),
@@ -20,8 +21,8 @@ class User(AbstractUser):
         unique=True,
         help_text=_('uuid for image')
     )
-    city = models.CharField(max_length=255, blank=True)
-    birthday = models.DateField(blank=True, null=True, )
+    city = models.CharField(max_length=255, blank=True, null=True)
+    birthday = models.DateField(blank=True, null=True)
 
     class Meta:
         verbose_name = _("User")
@@ -70,6 +71,7 @@ class Link(models.Model):
     class Meta:
         verbose_name = _("Link")
         verbose_name_plural = _("Links")
+        unique_together = ["user", "title"]
 
     def __str__(self):
         return self.title

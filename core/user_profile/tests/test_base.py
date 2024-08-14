@@ -16,19 +16,19 @@ class Settings(TestCase):
         cls.link_1 = Link.objects.create(
             user=cls.user,
             title='test_link_1',
-            link='https://test_lick_1.com/'
+            link='https://code.djangoproject.com/wiki/IntegrityError'
         )
 
         cls.link_2 = Link.objects.create(
             user=cls.user,
             title='test_link_2',
-            link='https://test_lick_2.com/'
+            link='https://code.djangoproject.com/wiki/IntegrityError'
         )
 
         cls.link_3 = Link.objects.create(
             user=cls.user,
             title='test_link_3',
-            link='https://test_lick_3.com/'
+            link='https://code.djangoproject.com/wiki/IntegrityError'
         )
 
         cls.customization = Customization.objects.create(

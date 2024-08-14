@@ -1,8 +1,11 @@
 import os
+import sys
 from datetime import timedelta
 from pathlib import Path
+from loguru import logger
+from core.loguru_handler import InterceptHandler
+import socket
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -31,8 +34,11 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
+    'debug_toolbar',
+    'drf_spectacular',
 
     'user_profile.apps.UserProfileConfig',
+    'jwt_registration.apps.JwtRegistrationConfig',
 ]
 
 MIDDLEWARE = [
@@ -43,6 +49,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
 ]
 
 ROOT_URLCONF = 'core.urls'
@@ -114,8 +122,6 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-STATIC_URL = 'static/'
-
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
@@ -123,10 +129,13 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'user_profile.User'
 
+STATIC_URL = "static/"
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
 SIMPLE_JWT = {
@@ -151,3 +160,43 @@ CACHES = {
     }
 }
 CELERY_BROKER_URL = 'redis://redis:6379/0'
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'intercept': {
+            '()': InterceptHandler,
+            'level': 0,
+        },
+    },
+    'loggers': {
+        '': {
+            'handlers': ['intercept'],
+            'level': "ERROR",
+            'propagate': True,
+        },
+    }
+}
+
+logger.remove()
+logger.add(sys.stdout, level="DEBUG", backtrace=True)
+logger.add("logs/debug.log", level="DEBUG", rotation="30 MB", backtrace=True, retention="1 days")
+logger.add("logs/info.log", level="DEBUG", rotation="30 MB", backtrace=True, retention="3 days")
+logger.add("logs/error.log", level="ERROR", rotation="30 MB", backtrace=True, retention="7 days")
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'API Schema',
+    'DESCRIPTION': 'Guide for the REST API',
+    'VERSION': '1.0.0',
+}
+
+INTERNAL_IPS = [
+    "127.0.0.1",
+]
+
+hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
+INTERNAL_IPS += [".".join(ip.split(".")[:-1] + ["1"]) for ip in ips]
+
+CACHE_LIVE_TIME = 60 * 60
+USER_PROFILE_CACHE_KEY = 'user_profile_{user}'

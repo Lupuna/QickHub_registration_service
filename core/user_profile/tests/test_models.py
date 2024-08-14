@@ -1,5 +1,7 @@
 from django.core.exceptions import ValidationError
+from django.db.utils import IntegrityError
 from .test_base import Settings
+from user_profile.models import Link
 from django.utils.translation import gettext_lazy as _
 
 
@@ -39,6 +41,10 @@ class TestUser(Settings):
             with self.assertRaises(ValidationError):
                 self.user.full_clean()
 
+    def test_email_index(self):
+        indexes = [index.name for index in self.user._meta.indexes]
+        self.assertIn('user_email_idx', indexes)
+
     def test_verbose_name(self):
         self.assertEqual(self.user._meta.verbose_name, _("User"))
         self.assertEqual(self.user._meta.verbose_name_plural, _("Users"))
@@ -64,6 +70,14 @@ class TestLink(Settings):
 
     def test_str_method(self):
         self.assertEqual(str(self.link_1), self.link_1.title)
+
+    def test_unique_together_constraint(self):
+        with self.assertRaises(IntegrityError):
+            wrong_link = Link.objects.create(
+                user=self.user,
+                title=self.link_1.title,
+                link='https://test_duplicate_link.com/'
+            )
 
     def test_verbose_name(self):
         self.assertEqual(self.link_1._meta.verbose_name, "Link")
