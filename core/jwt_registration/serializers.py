@@ -3,8 +3,8 @@ from user_profile.models import User, Customization
 
 
 class UserImportantSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, style={'input_type': 'password'}, required=False)
-    password2 = serializers.CharField(write_only=True, style={'input_type': 'password'}, required=False)
+    password = serializers.CharField(write_only=True, required=False)
+    password2 = serializers.CharField(write_only=True, required=False)
 
     class Meta:
         model = User
