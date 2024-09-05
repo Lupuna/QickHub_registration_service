@@ -9,7 +9,7 @@ from jwt_registration.utils import put_token_on_blacklist
 
 class UserTestCase(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username='testuser', email='test@example.com', password='testpassword')
+        self.user = User.objects.create_user(email='test@example.com', password='testpassword')
         self.refresh_token = RefreshToken.for_user(self.user)
 
     def test_put_token_on_blacklist_success(self):

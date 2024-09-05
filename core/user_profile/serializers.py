@@ -29,9 +29,9 @@ class ProfileUserSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'image_identifier',
             'phone', 'city', 'birthday',
-            'links', 'customization'
+            'links', 'customization', 'first_name', 'last_name'
         )
-        read_only_fields = ('id', 'email')
+        read_only_fields = ('id', )
 
     def create(self, validated_data):
         raise MethodNotAllowed('POST', detail='Creation is not allowed using this serializer.')
@@ -42,6 +42,8 @@ class ProfileUserSerializer(serializers.ModelSerializer):
         instance.phone = validated_data.get('phone', instance.phone)
         instance.city = validated_data.get('city', instance.city)
         instance.birthday = validated_data.get('birthday', instance.birthday)
+        instance.first_name = validated_data.get('first_name', instance.first_name)
+        instance.last_name = validated_data.get('last_name', instance.last_name)
         instance.save()
 
         if customization_data:

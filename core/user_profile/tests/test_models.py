@@ -25,7 +25,7 @@ class TestUser(Settings):
         ]
 
     def test_str_method(self):
-        self.assertEqual(str(self.user), self.user.email)
+        self.assertEqual(str(self.user), self.user.get_full_name())
 
     def test_valid_phone_numbers(self):
         for number in self.valid_phone_numbers:
@@ -48,6 +48,9 @@ class TestUser(Settings):
     def test_verbose_name(self):
         self.assertEqual(self.user._meta.verbose_name, _("User"))
         self.assertEqual(self.user._meta.verbose_name_plural, _("Users"))
+
+    def test_get_full_name(self):
+        self.assertEqual(self.user.get_full_name(), ("%s %s" % (self.user.first_name, self.user.last_name)).strip())
 
 
 class TestCustomization(Settings):
