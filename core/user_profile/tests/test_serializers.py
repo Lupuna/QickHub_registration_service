@@ -44,6 +44,8 @@ class ProfileUserSerializerTestCase(Settings):
             'phone': '0987654321',
             'city': 'New City',
             'birthday': '1995-01-01',
+            'first_name': 'new_first_name',
+            'last_name': 'new_last_name',
             'customization': {'font_size': 15},
             'links': [
                 {'title': 'Link 1', 'link': 'http://updatedlink1.com'},
@@ -59,7 +61,7 @@ class ProfileUserSerializerTestCase(Settings):
             (
                 'id', 'image_identifier',
                 'phone', 'city', 'birthday',
-                'links', 'customization'
+                'links', 'customization', 'first_name', 'last_name'
             )
         )
 
@@ -92,6 +94,8 @@ class ProfileUserSerializerTestCase(Settings):
         self.assertEqual(updated_user.phone, self.validated_data['phone'])
         self.assertEqual(updated_user.city, self.validated_data['city'])
         self.assertEqual(str(updated_user.birthday), self.validated_data['birthday'])
+        self.assertEqual(updated_user.first_name, self.validated_data['first_name'])
+        self.assertEqual(updated_user.last_name, self.validated_data['last_name'])
 
         updated_customization = updated_user.customization
         self.assertEqual(updated_customization.font_size, self.validated_data['customization']['font_size'])

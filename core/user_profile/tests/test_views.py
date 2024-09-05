@@ -35,7 +35,7 @@ class ProfileAPIViewSetTestCase(Settings):
         cache_key = settings.USER_PROFILE_CACHE_KEY.format(user=self.user.pk)
         self.client.get(self.profile_url)
         self.assertIsNotNone(cache.get(cache_key))
-        update_data = {'username': 'updateduser'}
+        update_data = {'eamil': 'updateduser@gmail.com'}
         response = client.patch(self.profile_url, update_data, format='json')
         self.assertIsNone(cache.get(cache_key))
 
@@ -53,7 +53,7 @@ class ProfileAPIViewSetTestCase(Settings):
 
 class UpdateImportantDataAPIViewTestCase(APITestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username='good_username', password='password_123')
+        self.user = User.objects.create_user(email='good_username@gmail.com', password='password_123', first_name='first', last_name='last')
         self.url = reverse('load_image')
         self.refresh = RefreshToken.for_user(self.user)
         self.data = {

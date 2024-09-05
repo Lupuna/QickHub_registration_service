@@ -8,9 +8,10 @@ class Settings(TestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.user = User.objects.create_user(
-            username='test_user_1',
             email='test_email@gmail.com',
             password='test_password',
+            first_name='test_first_name_1',
+            last_name='test_last_name_!'
         )
 
         cls.link_1 = Link.objects.create(
