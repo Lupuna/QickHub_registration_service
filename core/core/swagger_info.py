@@ -84,8 +84,8 @@ response_for_login = {
         examples=[
             OpenApiExample(
                 name="Missing Credentials",
-                value={"error": "Username and password are required"},
-                description="Occurs when the username or password is not provided.",
+                value={"error": "Email and password are required"},
+                description="Occurs when the email or password is not provided.",
                 response_only=True,
                 status_codes=["400"]
             )
@@ -99,8 +99,8 @@ response_for_login = {
         examples=[
             OpenApiExample(
                 name="Authentication Failed",
-                value={"error": "Incorrect username or password"},
-                description="Occurs when the provided username or password is incorrect.",
+                value={"error": "Incorrect email or password"},
+                description="Occurs when the provided email or password is incorrect.",
                 response_only=True,
                 status_codes=["401"]
             )
@@ -250,12 +250,11 @@ request_for_important_info = {
             'data_to_update': {
                 'type': 'object',
                 'properties': {
-                    'username': {'type': 'string'},
                     'email': {'type': 'string'},
                     'password': {'type': 'string'},
                     'password2': {'type': 'string'}
                 },
-                'required': ['username', 'email'],
+                'required': ['email'],
             },
             'refresh_token': {'type': 'string'},
             'password': {'type': 'string'},
@@ -268,10 +267,10 @@ request_for_login = {
     'application/json': {
         'type': 'object',
         'properties': {
-            'username': {'type': 'string'},
+            'email': {'type': 'string'},
             'password': {'type': 'string'},
         },
-        'required': ['username', 'password'],
+        'required': ['email', 'password'],
     }
 }
 
