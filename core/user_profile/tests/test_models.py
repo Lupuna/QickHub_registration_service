@@ -49,6 +49,9 @@ class TestUser(Settings):
         self.assertEqual(self.user._meta.verbose_name, _("User"))
         self.assertEqual(self.user._meta.verbose_name_plural, _("Users"))
 
+    def test_get_full_name(self):
+        self.assertEqual(self.user.get_full_name(), ("%s %s" % (self.user.first_name, self.user.last_name)).strip())
+
 
 class TestCustomization(Settings):
 
