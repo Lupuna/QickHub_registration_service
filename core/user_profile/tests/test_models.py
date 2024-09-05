@@ -25,7 +25,7 @@ class TestUser(Settings):
         ]
 
     def test_str_method(self):
-        self.assertEqual(str(self.user), self.user.email)
+        self.assertEqual(str(self.user), self.user.get_full_name())
 
     def test_valid_phone_numbers(self):
         for number in self.valid_phone_numbers:

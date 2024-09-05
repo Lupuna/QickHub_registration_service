@@ -1,5 +1,4 @@
 from django.contrib.auth import authenticate
-from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from rest_framework.exceptions import ValidationError, AuthenticationFailed
 from rest_framework.response import Response
@@ -36,19 +35,19 @@ class LoginAPIView(APIView):
 
     @extend_schema(request=request_for_login, responses=response_for_login)
     def post(self, request):
-        username = request.data.get('username')
+        email = request.data.get('email')
         password = request.data.get('password')
 
-        if username is None or password is None:
-            raise ValidationError({'error': 'Username and password are required'})
+        if email is None or password is None:
+            raise ValidationError({'error': 'Email and password are required'})
 
-        user = authenticate(username=username, password=password)
+        user = authenticate(email=email, password=password)
         if user is None:
             raise AuthenticationFailed({'error': 'Incorrect username or password'})
         refresh = RefreshToken.for_user(user)
         refresh.payload.update({
             'user_id': user.id,
-            'username': user.username
+            'email': user.email
         })
 
         return Response({

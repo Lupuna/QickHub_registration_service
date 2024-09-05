@@ -8,7 +8,8 @@ class UserImportantSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'password', 'password2')
+        fields = ('id', 'email', 'password', 'password2', 'first_name', 'last_name')
+        read_only_fields = ('first_name', 'last_name')
 
     def validate(self, attrs):
         data = super().validate(attrs)
@@ -22,7 +23,6 @@ class UserImportantSerializer(serializers.ModelSerializer):
         validated_data.pop('password2')
         user = User(
             email=validated_data['email'],
-            username=validated_data['username'],
         )
         user.set_password(validated_data['password'])
         user.save()
@@ -31,7 +31,6 @@ class UserImportantSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         validated_data.pop('password2')
-        instance.username = validated_data.get('username', instance.username)
         instance.email = validated_data.get('email', instance.email)
         if validated_data.get('password'): instance.set_password(validated_data['password'])
         instance.save()
