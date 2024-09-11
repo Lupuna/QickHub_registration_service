@@ -200,3 +200,7 @@ INTERNAL_IPS += [".".join(ip.split(".")[:-1] + ["1"]) for ip in ips]
 
 CACHE_LIVE_TIME = 60 * 60
 USER_PROFILE_CACHE_KEY = 'user_profile_{user}'
+STORAGE_ACCESS_KEY = os.environ.get('ACCESS_STORAGE_KEY')
+STORAGE_SECRET_KEY = os.environ.get('SECRET_STORAGE_KEY')
+BUCKET_NAME = 'bucket-for-user-avatar'
+STORAGE_URL = f'https://s3.storage.selcloud.ru/'
