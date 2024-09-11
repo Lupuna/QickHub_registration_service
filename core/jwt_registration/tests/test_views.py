@@ -1,8 +1,9 @@
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
-from user_profile.models import User
 from rest_framework_simplejwt.tokens import RefreshToken
+
+from user_profile.models import User
 
 
 class RegistrationAPITestCase(APITestCase):

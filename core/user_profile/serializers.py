@@ -1,8 +1,9 @@
 from django.core.files import File
 from django.core.files.storage import FileSystemStorage
 from rest_framework import serializers
-from user_profile.models import User, Link, Customization
 from rest_framework.exceptions import MethodNotAllowed, ValidationError
+
+from user_profile.models import User, Link, Customization
 from user_profile.tasks import upload_file
 
 

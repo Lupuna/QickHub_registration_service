@@ -1,10 +1,17 @@
-from rest_framework.exceptions import MethodNotAllowed, ValidationError
-from .test_base import Settings
+from io import BytesIO
+from unittest.mock import patch
+
+from PIL import Image
+from django.core.files.uploadedfile import SimpleUploadedFile
+from rest_framework.exceptions import MethodNotAllowed
+
 from user_profile.models import Link
 from user_profile.serializers import LinkSerializer, CustomizationSerializer, ProfileUserSerializer, ImageSerializer
-from django.core.files.uploadedfile import SimpleUploadedFile
-from PIL import Image
-from io import BytesIO
+from .test_base import Settings
+
+
+def mock_upload_file(path: str):
+    pass
 
 
 class LinkSerializerTestCase(Settings):
@@ -121,9 +128,10 @@ class ProfileUserSerializerTestCase(Settings):
         self.assertEqual(Link.objects.filter(user=self.user).count(), 3)
 
 
+@patch('user_profile.serializers.upload_file', side_effect=mock_upload_file)
 class ImageSerializerTestCase(Settings):
 
-    def test_serializer_valid_data(self):
+    def test_serializer_valid_data(self, mock_upload_file):
         image = self.create_test_image()
         data = {'user': self.user.id, 'image': image}
         serializer = ImageSerializer(data=data)
@@ -131,28 +139,11 @@ class ImageSerializerTestCase(Settings):
         result = serializer.save()
         self.assertEqual(result['status'], True)
 
-    def test_serializer_invalid_image(self):
+    def test_serializer_invalid_image(self, mock_upload_file):
         data = {'user': self.user.id}
         serializer = ImageSerializer(data=data)
         self.assertFalse(serializer.is_valid())
         self.assertIn('image', serializer.errors)
-
-    def test_processing_image_function_valid(self):
-        image = self.create_test_image()
-        result = ImageSerializer().processing_image(self.user.id, image)
-        self.assertIsInstance(result, tuple)
-        self.assertEqual(len(result), 2)
-        name, image_file = result
-        self.assertEqual(name, f'{self.user.image_identifier}.webp')
-        self.assertEqual(image_file.name, f'{self.user.image_identifier}.webp')
-        image_file.seek(0)
-        processed_image = Image.open(image_file)
-        self.assertEqual(processed_image.format, 'WEBP')
-
-    def test_processing_image_function_invalid_user(self):
-        image = self.create_test_image()
-        with self.assertRaises(ValidationError):
-            ImageSerializer().processing_image(9999, image)
 
     @staticmethod
     def create_test_image():

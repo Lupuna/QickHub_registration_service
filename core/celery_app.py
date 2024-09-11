@@ -1,6 +1,7 @@
 import os
 import time
 import celery
+
 from django.conf import settings
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')

@@ -1,10 +1,12 @@
 import os
+import socket
 import sys
 from datetime import timedelta
 from pathlib import Path
+
 from loguru import logger
+
 from core.loguru_handler import InterceptHandler
-import socket
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 

@@ -1,6 +1,7 @@
 from django.urls import reverse, resolve
-from .test_base import Settings
+
 from user_profile.views import ProfileAPIVewSet, ImageAPIView
+from .test_base import Settings
 
 
 class ProfileAPIRouterTestCase(Settings):

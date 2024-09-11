@@ -1,11 +1,13 @@
-from django.contrib.auth.models import AbstractUser, AbstractBaseUser, PermissionsMixin
-from django.utils.translation import gettext_lazy as _
+import uuid
+
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
+from django.core.mail import send_mail
 from django.core.validators import RegexValidator, MaxValueValidator
 from django.db import models
 from django.utils import timezone
-from django.core.mail import send_mail
+from django.utils.translation import gettext_lazy as _
+
 from user_profile.managers import UserManager
-import uuid
 
 
 class User(AbstractBaseUser, PermissionsMixin):

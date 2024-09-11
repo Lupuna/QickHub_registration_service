@@ -1,7 +1,8 @@
 from celery import shared_task
-from django.core.files.storage import FileSystemStorage
-from core.storage_client import S3Client
 from django.conf import settings
+from django.core.files.storage import FileSystemStorage
+
+from core.storage_client import S3Client
 
 
 @shared_task

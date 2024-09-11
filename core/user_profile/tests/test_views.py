@@ -1,14 +1,16 @@
+from io import BytesIO
+
+from PIL import Image
 from django.conf import settings
 from django.core.cache import cache
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from rest_framework import status
-from rest_framework_simplejwt.tokens import RefreshToken
-from .test_base import Settings
 from rest_framework.test import APITestCase, APIClient
+from rest_framework_simplejwt.tokens import RefreshToken
+
 from user_profile.models import User
-from django.core.files.uploadedfile import SimpleUploadedFile
-from PIL import Image
-from io import BytesIO
+from .test_base import Settings
 
 
 class ProfileAPIViewSetTestCase(Settings):

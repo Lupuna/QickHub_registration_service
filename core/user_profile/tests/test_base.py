@@ -1,4 +1,9 @@
+import shutil
+import tempfile
+
+from django.conf import settings
 from django.test import TestCase
+
 from user_profile.models import User, Customization, Link
 
 
@@ -7,6 +12,8 @@ class Settings(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+
+        settings.MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
         cls.user = User.objects.create_user(
             email='test_email@gmail.com',
             password='test_password',
@@ -35,3 +42,8 @@ class Settings(TestCase):
         cls.customization = Customization.objects.create(
             user=cls.user
         )
+
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        shutil.rmtree(settings.MEDIA_ROOT, ignore_errors=True)
