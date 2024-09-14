@@ -238,6 +238,12 @@ response_for_upload_image = {
                 description="Occurs when no image is provided in the request.",
                 response_only=True,
                 status_codes=["400"]
+            ),
+            OpenApiExample(
+                name="Image Upload Failed - No Header multipart/form-data",
+                value={"error": "header multipart/form-data is required"},
+                response_only=True,
+                status_codes=["400"]
             )
         ]
     )

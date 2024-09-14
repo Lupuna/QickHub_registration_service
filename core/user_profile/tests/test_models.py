@@ -1,8 +1,9 @@
 from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
-from .test_base import Settings
-from user_profile.models import Link
 from django.utils.translation import gettext_lazy as _
+
+from user_profile.models import Link
+from .test_base import Settings
 
 
 class TestUser(Settings):

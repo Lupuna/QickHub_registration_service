@@ -1,5 +1,6 @@
 from django.test import TestCase
 from rest_framework.exceptions import ValidationError
+
 from jwt_registration.serializers import UserImportantSerializer
 from user_profile.models import User
 
