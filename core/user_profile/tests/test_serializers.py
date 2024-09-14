@@ -1,17 +1,10 @@
-from io import BytesIO
 from unittest.mock import patch
 
-from PIL import Image
-from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework.exceptions import MethodNotAllowed
 
 from user_profile.models import Link
 from user_profile.serializers import LinkSerializer, CustomizationSerializer, ProfileUserSerializer, ImageSerializer
-from .test_base import Settings
-
-
-def mock_upload_file(path: str):
-    pass
+from .test_base import Settings, mock_upload_file
 
 
 class LinkSerializerTestCase(Settings):
@@ -132,8 +125,7 @@ class ProfileUserSerializerTestCase(Settings):
 class ImageSerializerTestCase(Settings):
 
     def test_serializer_valid_data(self, mock_upload_file):
-        image = self.create_test_image()
-        data = {'user': self.user.id, 'image': image}
+        data = {'user': self.user.id, 'image': self.image}
         serializer = ImageSerializer(data=data)
         self.assertTrue(serializer.is_valid())
         result = serializer.save()
@@ -145,11 +137,3 @@ class ImageSerializerTestCase(Settings):
         self.assertFalse(serializer.is_valid())
         self.assertIn('image', serializer.errors)
 
-    @staticmethod
-    def create_test_image():
-        file = BytesIO()
-        image = Image.new('RGB', (100, 100))
-        image.save(file, 'JPEG')
-        file.name = 'test.jpeg'
-        file.seek(0)
-        return SimpleUploadedFile('test.jpeg', file.getvalue(), content_type='image/jpeg')

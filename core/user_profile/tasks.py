@@ -11,13 +11,11 @@ def upload_file(path: str):
 
     try:
         client = S3Client(
-            '679970d1e64c4b3f91f3c734d22115aa',
-            '583424ee43e047d38be860bc83238c9e',
+            settings.STORAGE_ACCESS_KEY,
+            settings.STORAGE_SECRET_KEY,
             settings.STORAGE_URL,
             settings.BUCKET_NAME,
         )
         client.upload_file(path)
     finally:
         storage.delete(path)
-
-

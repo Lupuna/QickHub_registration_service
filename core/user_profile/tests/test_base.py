@@ -1,6 +1,9 @@
+from io import BytesIO
+from PIL import Image
 import shutil
 import tempfile
 
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.conf import settings
 from django.test import TestCase
 
@@ -43,7 +46,22 @@ class Settings(TestCase):
             user=cls.user
         )
 
+        cls.image = cls.create_test_image()
+
     @classmethod
     def tearDownClass(cls):
         super().tearDownClass()
         shutil.rmtree(settings.MEDIA_ROOT, ignore_errors=True)
+
+    @staticmethod
+    def create_test_image():
+        file = BytesIO()
+        image = Image.new('RGB', (100, 100))
+        image.save(file, 'JPEG')
+        file.name = 'test.jpeg'
+        file.seek(0)
+        return SimpleUploadedFile('test.jpeg', file.getvalue(), content_type='image/jpeg')
+
+
+def mock_upload_file(path: str):
+    pass
