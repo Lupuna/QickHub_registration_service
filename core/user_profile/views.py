@@ -1,18 +1,19 @@
+from django.conf import settings
+from django.core.cache import cache
+from drf_spectacular.utils import extend_schema
+from rest_framework import status
 from rest_framework.exceptions import ValidationError
+from rest_framework.mixins import RetrieveModelMixin, UpdateModelMixin
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
-from rest_framework.mixins import RetrieveModelMixin, UpdateModelMixin
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from user_profile.serializers import ProfileUserSerializer, ImageSerializer
-from drf_spectacular.utils import extend_schema
+
 from core.swagger_info import response_for_upload_image, request_for_upload_image
 from user_profile.models import User
-from django.conf import settings
-from django.core.cache import cache
+from user_profile.serializers import ProfileUserSerializer, ImageSerializer
 
 
 class ProfileAPIVewSet(GenericViewSet, RetrieveModelMixin, UpdateModelMixin):

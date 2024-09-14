@@ -1,10 +1,13 @@
 import os
+import socket
 import sys
 from datetime import timedelta
 from pathlib import Path
+from dotenv import load_dotenv
+
 from loguru import logger
+
 from core.loguru_handler import InterceptHandler
-import socket
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -19,6 +22,8 @@ SECRET_KEY = 'django-insecure-=s99!jrahn_)iiv+5n(-gv5l3*3hi^)m37@60@60ib^um3!d*i
 DEBUG = True
 
 ALLOWED_HOSTS = []
+
+load_dotenv()
 
 
 # Application definition
@@ -200,3 +205,7 @@ INTERNAL_IPS += [".".join(ip.split(".")[:-1] + ["1"]) for ip in ips]
 
 CACHE_LIVE_TIME = 60 * 60
 USER_PROFILE_CACHE_KEY = 'user_profile_{user}'
+STORAGE_ACCESS_KEY = os.getenv('ACCESS_STORAGE_KEY')
+STORAGE_SECRET_KEY = os.getenv('SECRET_STORAGE_KEY')
+BUCKET_NAME = 'bucket-for-user-avatar'
+STORAGE_URL = f'https://s3.storage.selcloud.ru/'

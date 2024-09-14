@@ -1,8 +1,10 @@
+from django.core.files import File
+from django.core.files.storage import FileSystemStorage
 from rest_framework import serializers
+from rest_framework.exceptions import MethodNotAllowed, ValidationError
+
 from user_profile.models import User, Link, Customization
-from rest_framework.exceptions import MethodNotAllowed
-from PIL import Image
-from io import BytesIO
+from user_profile.tasks import upload_file
 
 
 class LinkSerializer(serializers.ModelSerializer):
@@ -31,7 +33,7 @@ class ProfileUserSerializer(serializers.ModelSerializer):
             'phone', 'city', 'birthday',
             'links', 'customization', 'first_name', 'last_name'
         )
-        read_only_fields = ('id', )
+        read_only_fields = ('id',)
 
     def create(self, validated_data):
         raise MethodNotAllowed('POST', detail='Creation is not allowed using this serializer.')
@@ -66,18 +68,16 @@ class ImageSerializer(serializers.Serializer):
     user = serializers.IntegerField(required=True, write_only=True)
 
     def create(self, validated_data):
-        name, image_file = self.processing_image(validated_data['user'], validated_data['image'])
-        return {'status': True}
+        image = validated_data['image']
+        user = validated_data['user']
 
-    def processing_image(self, user_id: int, image) -> tuple | dict:
         try:
-            photo_uuid = User.objects.get(id=user_id).image_identifier
+            photo_uuid = User.objects.get(id=user).image_identifier
         except User.DoesNotExist as error:
-            raise serializers.ValidationError(error)
-        name = f"{photo_uuid}.webp"
-        image = Image.open(image)
-        image_file = BytesIO()
-        image.save(image_file, format='WEBP')
-        image_file.name = name
-        image_file.seek(0)
-        return name, image_file
+            raise ValidationError(error)
+
+        storage = FileSystemStorage()
+        image_name = f'{photo_uuid}.{image.name.split(".")[-1]}'
+        storage.save(image_name, File(image))
+        upload_file.delay(storage.path(image_name))
+        return {'status': True}

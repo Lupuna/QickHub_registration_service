@@ -1,10 +1,12 @@
+from unittest.mock import patch
+
 from django.test import TestCase
+from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.exceptions import ValidationError
-from unittest.mock import patch
-from user_profile.models import User
+
 from jwt_registration.utils import put_token_on_blacklist
+from user_profile.models import User
 
 
 class UserTestCase(TestCase):

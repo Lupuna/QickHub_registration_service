@@ -1,7 +1,7 @@
+from loguru import logger
 from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
-from loguru import logger
 
 
 def put_token_on_blacklist(refresh_token):

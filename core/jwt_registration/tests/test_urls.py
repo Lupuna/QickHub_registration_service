@@ -1,7 +1,8 @@
 from django.test import SimpleTestCase
 from django.urls import resolve, reverse
-from jwt_registration import views
 from rest_framework_simplejwt.views import TokenRefreshView
+
+from jwt_registration import views
 
 
 class TestUrls(SimpleTestCase):
