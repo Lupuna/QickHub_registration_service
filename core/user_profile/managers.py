@@ -4,9 +4,9 @@ from django.contrib.auth.models import BaseUserManager
 class UserManager(BaseUserManager):
     use_in_migrations = True
 
-    def _create_user(self, username, email, password, **extra_fields):
-        if not username:
-            raise ValueError("The given username must be set")
+    def _create_user(self, email, password, **extra_fields):
+        if not email:
+            raise ValueError("The given email must be set")
         email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
