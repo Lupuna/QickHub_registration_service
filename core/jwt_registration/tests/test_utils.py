@@ -11,7 +11,12 @@ from user_profile.models import User
 
 class UserTestCase(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(email='test@example.com', password='testpassword')
+        self.user = User.objects.create_user(
+            email='test@example.com',
+            password='testpassword',
+            first_name='first',
+            last_name='last'
+        )
         self.refresh_token = RefreshToken.for_user(self.user)
 
     def test_put_token_on_blacklist_success(self):

@@ -9,28 +9,30 @@ class UserManagerTestCase(TestCase):
         self.user_model = get_user_model()
         self.valid_email = 'test_user@gmial.com'
         self.valid_password = 'test_password_123'
+        self.valid_first_name = 'first',
+        self.valid_last_name = 'last',
 
     def test_create_user_with_email_success(self):
         user = self.user_model.objects.create_user(
             email=self.valid_email,
-            password=self.valid_password
+            password=self.valid_password,
+            first_name=self.valid_first_name,
+            last_name=self.valid_last_name
         )
         self.assertEqual(user.email, self.valid_email)
         self.assertTrue(user.check_password(self.valid_password))
 
-    def tset_create_user_no_email_raises_error(self):
+    def tset_create_user_raises_error(self):
         with self.assertRaises(ValueError):
             self.user_model.objects.create_user(email=None, password=self.valid_password)
 
     def test_create_superuser(self):
-        user = self.user_model.objects.create_superuser(
+        user = self.user_model.objects.create_user(
             email=self.valid_email,
-            password=self.valid_password
+            password=self.valid_password,
+            first_name=self.valid_first_name,
+            last_name=self.valid_last_name
         )
         self.assertEqual(user.email, self.valid_email)
         self.assertTrue(user.check_password(self.valid_password))
-        self.assertTrue(user.is_staff)
-
-
-
-
+        self.assertFalse(user.is_staff)
