@@ -39,7 +39,12 @@ class RegistrationAPITestCase(APITestCase):
         self.assertIn('non_field_errors', response.data)
 
     def test_login(self):
-        User.objects.create_user(email=self.user_data['email'], password=self.user_data['password'])
+        User.objects.create_user(
+            email=self.user_data['email'],
+            password=self.user_data['password'],
+            first_name=self.user_data['first_name'],
+            last_name=self.user_data['last_name'],
+        )
         login_data = {
             'email': self.user_data['email'],
             'password': self.user_data['password']
@@ -70,7 +75,7 @@ class RegistrationAPITestCase(APITestCase):
             email=self.user_data['email'],
             password=self.user_data['password'],
             first_name=self.user_data['first_name'],
-            last_name=self.user_data['last_name']
+            last_name=self.user_data['last_name'],
         )
         refresh = RefreshToken.for_user(user)
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {refresh.access_token}')
@@ -78,7 +83,12 @@ class RegistrationAPITestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_205_RESET_CONTENT)
 
     def test_logout_without_refresh_token(self):
-        user = User.objects.create_user(email=self.user_data['email'], password=self.user_data['password'])
+        user = User.objects.create_user(
+            email=self.user_data['email'],
+            password=self.user_data['password'],
+            first_name=self.user_data['first_name'],
+            last_name=self.user_data['last_name'],
+        )
         refresh = RefreshToken.for_user(user)
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {refresh.access_token}')
         response = self.client.post(self.logout_url, {})
@@ -86,13 +96,23 @@ class RegistrationAPITestCase(APITestCase):
         self.assertIn('error', response.data)
 
     def test_logout_with_invalid_token(self):
-        User.objects.create_user(email=self.user_data['email'], password=self.user_data['password'])
+        User.objects.create_user(
+            email=self.user_data['email'],
+            password=self.user_data['password'],
+            first_name=self.user_data['first_name'],
+            last_name=self.user_data['last_name'],
+        )
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer invalidtoken')
         response = self.client.post(self.logout_url, {'refresh': 'invalidtoken'})
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_logout_without_access_token(self):
-        user = User.objects.create_user(email=self.user_data['email'], password=self.user_data['password'])
+        user = User.objects.create_user(
+            email=self.user_data['email'],
+            password=self.user_data['password'],
+            first_name=self.user_data['first_name'],
+            last_name=self.user_data['last_name'],
+        )
         refresh = RefreshToken.for_user(user)
         response = self.client.post(self.logout_url, {'refresh': str(refresh)})
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
