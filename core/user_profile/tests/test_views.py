@@ -40,7 +40,7 @@ class ProfileAPIViewSetTestCase(Settings):
         cache_key = settings.USER_PROFILE_CACHE_KEY.format(user=self.user.pk)
         self.client.get(self.profile_url)
         self.assertIsNotNone(cache.get(cache_key))
-        update_data = {'eamil': 'updateduser@gmail.com'}
+        update_data = {'email': 'updateduser@gmail.com'}
         response = client.patch(self.profile_url, update_data, format='json')
         self.assertIsNone(cache.get(cache_key))
 
