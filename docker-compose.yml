@@ -15,6 +15,7 @@ x-worker-template: &worker-template
     - DB_NAME=dbname
     - DB_USER=dbuser
     - DB_PASS=password
+    - IS_DEBUG=True
 
 services:
   web-app:
