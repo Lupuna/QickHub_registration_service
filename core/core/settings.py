@@ -20,7 +20,7 @@ SECRET_KEY = 'django-insecure-=s99!jrahn_)iiv+5n(-gv5l3*3hi^)m37@60@60ib^um3!d*i
 
 # SECURITY WARNING: don't run with debug turned on in production!
 load_dotenv()
-DEBUG = os.environ.get('IS_DEBUG')
+DEBUG = os.environ.get('IS_DEBUG', False)
 
 ALLOWED_HOSTS = ["localhost", "92.63.76.98", '127.0.0.1']
 
@@ -136,6 +136,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'user_profile.User'
 
 STATIC_URL = "static/"
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -214,5 +215,3 @@ STORAGE_ACCESS_KEY = os.getenv('ACCESS_STORAGE_KEY')
 STORAGE_SECRET_KEY = os.getenv('SECRET_STORAGE_KEY')
 BUCKET_NAME = 'bucket-for-user-avatar'
 STORAGE_URL = f'https://s3.storage.selcloud.ru/'
-
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
