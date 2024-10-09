@@ -32,7 +32,7 @@ services:
       - DB_USER=dbuser
       - DB_PASS=password
     command: >
-      sh -c "gunicorn core.wsgi:application --bind 0.0.0.0:8000"
+      sh -c "gunicorn core.wsgi:application --bind 92.63.67.98:8000"
     depends_on:
       - database
 
