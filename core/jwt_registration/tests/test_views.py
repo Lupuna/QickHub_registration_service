@@ -36,7 +36,6 @@ class RegistrationAPITestCase(APITestCase):
     def test_registration_invalid_data(self):
         response = self.client.post(self.registration_url, self.wrong_user_data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('non_field_errors', response.data)
 
     def test_login(self):
         User.objects.create_user(

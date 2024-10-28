@@ -15,6 +15,13 @@ class UserImportantSerializer(serializers.ModelSerializer):
         data = super().validate(attrs)
         password = attrs.get('password')
         password2 = attrs.get('password2')
+
+        if self.instance is None:
+            if not attrs.get('first_name'):
+                raise serializers.ValidationError({'error': 'First name is required.'})
+            if not attrs.get('last_name'):
+                raise serializers.ValidationError({'error': 'Last name is required.'})
+
         if (password and password2) and password != password2:
             raise serializers.ValidationError('Password mismatch')
         attrs.pop('password2')

@@ -45,6 +45,24 @@ response_for_registration = {
                 status_codes=["400"]
             ),
             OpenApiExample(
+                name="Registration Failed - Last name is required",
+                value={
+                    'error': 'First name is required.'
+                },
+                description="Occurs when the user provides data that does not pass validation.",
+                response_only=True,
+                status_codes=["400"]
+            ),
+            OpenApiExample(
+                name="Registration Failed - First name is required",
+                value={
+                    'error': 'Last name is required.'
+                },
+                description="Occurs when the user provides data that does not pass validation.",
+                response_only=True,
+                status_codes=["400"]
+            ),
+            OpenApiExample(
                 name="Registration Failed - Invalid Data",
                 value={
                     "error": "Invalid email format"
