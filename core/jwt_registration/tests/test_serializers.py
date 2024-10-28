@@ -46,6 +46,22 @@ class UserImportantSerializerTestCase(TestCase):
             serializer.is_valid(raise_exception=True)
         self.assertIn('Password mismatch', str(e.exception))
 
+    def test_create_user_missing_first_name(self):
+        invalid_data = self.data.copy()
+        invalid_data.pop('first_name')
+        serializer = UserImportantSerializer(data=invalid_data)
+        with self.assertRaises(ValidationError) as e:
+            serializer.is_valid(raise_exception=True)
+        self.assertIn('First name is required.', str(e.exception))
+
+    def test_create_user_missing_last_name(self):
+        invalid_data = self.data.copy()
+        invalid_data.pop('last_name')
+        serializer = UserImportantSerializer(data=invalid_data)
+        with self.assertRaises(ValidationError) as e:
+            serializer.is_valid(raise_exception=True)
+        self.assertIn('Last name is required.', str(e.exception))
+
     def test_create_user(self):
         serializer = UserImportantSerializer(data=self.data)
         self.assertTrue(serializer.is_valid())
