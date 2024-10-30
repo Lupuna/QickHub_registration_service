@@ -30,14 +30,10 @@ class RegistrationAPIView(APIView):
             response.set_cookie(
                 key='refresh_token',
                 value=str(refresh),
-                httponly=True,
-                samesite='Lax'
             )
             response.set_cookie(
                 key='access_token',
                 value=str(refresh.access_token),
-                httponly=True,
-                samesite='Lax'
             )
 
             return response
@@ -67,14 +63,10 @@ class LoginAPIView(APIView):
         response.set_cookie(
             key='refresh_token',
             value=str(refresh),
-            httponly=True,
-            samesite='Lax'
         )
         response.set_cookie(
             key='access_token',
             value=str(refresh.access_token),
-            httponly=True,
-            samesite='Lax'
         )
 
         return response
@@ -112,16 +104,10 @@ class UpdateImportantDataAPIView(APIView):
             response.set_cookie(
                 key='refresh_token',
                 value=str(refresh),
-                httponly=True,
-                secure=True,
-                samesite='Lax'
             )
             response.set_cookie(
                 key='access_token',
                 value=str(refresh.access_token),
-                httponly=True,
-                secure=True,
-                samesite='Lax'
             )
             return response
 
@@ -154,16 +140,10 @@ class TokenRefreshView(APIView):
             response.set_cookie(
                 key='access_token',
                 value=new_access_token,
-                httponly=True,
-                secure=True,
-                samesite='Lax'
             )
             response.set_cookie(
                 key='refresh_token',
                 value=new_refresh_token,
-                httponly=True,
-                secure=True,
-                samesite='Lax'
             )
 
             return response
