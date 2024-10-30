@@ -2,7 +2,6 @@ from botocore.session import get_session
 
 
 class S3Client:
-
     def __init__(
             self,
             access_key: str,

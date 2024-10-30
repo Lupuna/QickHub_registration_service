@@ -10,10 +10,7 @@ response_for_registration = {
         examples=[
             OpenApiExample(
                 name="Successful Registration",
-                value={
-                    "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTczMTMzNjQ5MywiaWF0IjoxNzIzNTYwNDkzLCJqdGkiOiI2ZTRjNjJlMTg0M2Y0YWRjOGFkZGI4ZmYwZDlmNDZmOCIsInVzZXJfaWQiOjQsInVzZXJuYW1lIjoidGltbWl0aSIsImVtYWlsIjoidGVzdGlfZW1haWxAZ21haWwuY29tIn0.m-I75pUpXvaX3B6DpYF4aH_zE-WPJtW3fZEOAQJUheo",
-                    "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzIzNjQ2ODkzLCJpYXQiOjE3MjM1NjA0OTMsImp0aSI6IjYwMzliOTk2ZGE3NjQ5MzZiMmQxNGYwYmFiYWMwZDg1IiwidXNlcl9pZCI6NCwidXNlcm5hbWUiOiJ0aW1taXRpIiwiZW1haWwiOiJ0ZXN0aV9lbWFpbEBnbWFpbC5jb20ifQ.qFBY9V5M4sYqboXf_hlLKZP0n90UexYWw8N5zWB1yNI"
-                },
+                value={},
                 description="A successful registration returns both refresh and access tokens.",
                 response_only=True,
                 status_codes=["201"]
@@ -84,10 +81,7 @@ response_for_login = {
         examples=[
             OpenApiExample(
                 name="Successful Login",
-                value={
-                    "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTczMTMzNjQ5MywiaWF0IjoxNzIzNTYwNDkzLCJqdGkiOiI2ZTRjNjJlMTg0M2Y0YWRjOGFkZGI4ZmYwZDlmNDZmOCIsInVzZXJfaWQiOjQsInVzZXJuYW1lIjoidGltbWl0aSIsImVtYWlsIjoidGVzdGlfZW1haWxAZ21haWwuY29tIn0.m-I75pUpXvaX3B6DpYF4aH_zE-WPJtW3fZEOAQJUheo",
-                    "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzIzNjQ2ODkzLCJpYXQiOjE3MjM1NjA0OTMsImp0aSI6IjYwMzliOTk2ZGE3NjQ5MzZiMmQxNGYwYmFiYWMwZDg1IiwidXNlcl9pZCI6NCwidXNlcm5hbWUiOiJ0aW1taXRpIiwiZW1haWwiOiJ0ZXN0aV9lbWFpbEBnbWFpbC5jb20ifQ.qFBY9V5M4sYqboXf_hlLKZP0n90UexYWw8N5zWB1yNI"
-                },
+                value={},
                 description="A successful login returns both refresh and access tokens.",
                 response_only=True,
                 status_codes=["200"]
@@ -137,10 +131,7 @@ response_for_important_data = {
         examples=[
             OpenApiExample(
                 name="Successful Update",
-                value={
-                    "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTczMTMzNjQ5MywiaWF0IjoxNzIzNTYwNDkzLCJqdGkiOiI2ZTRjNjJlMTg0M2Y0YWRjOGFkZGI4ZmYwZDlmNDZmOCIsInVzZXJfaWQiOjQsInVzZXJuYW1lIjoidGltbWl0aSIsImVtYWlsIjoidGVzdGlfZW1haWxAZ21haWwuY29tIn0.m-I75pUpXvaX3B6DpYF4aH_zE-WPJtW3fZEOAQJUheo",
-                    "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzIzNjQ2ODkzLCJpYXQiOjE3MjM1NjA0OTMsImp0aSI6IjYwMzliOTk2ZGE3NjQ5MzZiMmQxNGYwYmFiYWMwZDg1IiwidXNlcl9pZCI6NCwidXNlcm5hbWUiOiJ0aW1taXRpIiwiZW1haWwiOiJ0ZXN0aV9lbWFpbEBnbWFpbC5jb20ifQ.qFBY9V5M4sYqboXf_hlLKZP0n90UexYWw8N5zWB1yNI"
-                },
+                value={},
                 description="Returned when user data is updated successfully.",
                 response_only=True,
                 status_codes=["200"]
@@ -195,6 +186,64 @@ response_for_important_data = {
     )
 }
 
+
+response_for_refresh_token = {
+    200: OpenApiResponse(
+        response={'ok': 'ok'},
+        description="User data updated successfully",
+        examples=[
+            OpenApiExample(
+                name="Successful Refresh",
+                value={},
+                response_only=True,
+                status_codes=["200"]
+            )
+        ]
+    ),
+    401: OpenApiResponse(
+        response={'error': 'string'},
+        description="Invalid refresh token",
+        examples=[
+            OpenApiExample(
+                name="Authentication Failed",
+                value={'error': 'Invalid refresh token'},
+                description="Occurs when the provided current password does not match.",
+                response_only=True,
+                status_codes=["401"]
+            )
+        ]
+    )
+}
+
+response_for_validate_token = {
+    200: OpenApiResponse(
+        response={'detail': 'Token is valid'},
+        description="Token is valid",
+        examples=[
+            OpenApiExample(
+                name="Token is valid",
+                value={'detail': 'Token is valid'},
+                response_only=True,
+                status_codes=["200"]
+            )
+        ]
+    ),
+    401: OpenApiResponse(
+        response={'error': 'string'},
+        description="Invalid refresh token",
+        examples=[
+            OpenApiExample(
+                name="Authentication Failed",
+                value={'error': 'Invalid refresh token'},
+                description="Occurs when the provided current password does not match.",
+                response_only=True,
+                status_codes=["401"]
+            )
+        ]
+    )
+}
+
+
 response_for_logout = {
     205: OpenApiResponse(
         response={
@@ -204,7 +253,7 @@ response_for_logout = {
         examples=[
             OpenApiExample(
                 name="Successful Logout",
-                value={"detail": "Successfully logged out"},
+                value={},
                 description="Returned when the user has been successfully logged out.",
                 response_only=True,
                 status_codes=["205"]
@@ -280,7 +329,6 @@ request_for_important_info = {
                 },
                 'required': ['email'],
             },
-            'refresh_token': {'type': 'string'},
             'password': {'type': 'string'},
         },
         'required': ['data_to_update', 'refresh_token', 'password'],
