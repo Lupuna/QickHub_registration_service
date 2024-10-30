@@ -1,7 +1,7 @@
 from django.urls import path
-from rest_framework_simplejwt.views import TokenRefreshView, TokenVerifyView
-
-from jwt_registration.views import LoginAPIView, RegistrationAPIView, LogoutAPIView, UpdateImportantDataAPIView
+from jwt_registration.views import (
+    LoginAPIView, RegistrationAPIView, LogoutAPIView, UpdateImportantDataAPIView, TokenRefreshView, TokenVerifyView
+)
 
 urlpatterns = [
     path('v1/login/', LoginAPIView.as_view(), name='login'),
