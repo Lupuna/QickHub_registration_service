@@ -1,6 +1,5 @@
 from django.test import SimpleTestCase
 from django.urls import resolve, reverse
-from rest_framework_simplejwt.views import TokenRefreshView, TokenVerifyView
 
 from jwt_registration import views
 
@@ -21,11 +20,11 @@ class TestUrls(SimpleTestCase):
 
     def test_refresh_token_url_is_resolve(self):
         url = reverse('token_refresh')
-        self.assertEqual(resolve(url).func.view_class, TokenRefreshView)
+        self.assertEqual(resolve(url).func.view_class, views.TokenRefreshView)
 
     def test_refresh_token_verify_is_resolve(self):
         url = reverse('token_verify')
-        self.assertEqual(resolve(url).func.view_class, TokenVerifyView)
+        self.assertEqual(resolve(url).func.view_class, views.TokenVerifyView)
 
     def test_update_important_data_url_is_resolve(self):
         url = reverse('update_important_data')

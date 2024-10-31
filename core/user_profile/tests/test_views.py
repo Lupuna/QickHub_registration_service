@@ -25,7 +25,7 @@ class ProfileAPIViewSetTestCase(Settings):
     def user_login(self):
         client = APIClient()
         client.force_login(user=self.user)
-        client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.refresh.access_token}')
+        client.cookies['access_token'] = str(self.refresh.access_token)
         return client
 
     def test_retrieve_with_cache(self):
@@ -81,7 +81,7 @@ class UpdateImportantDataAPIViewTestCase(APITestCase):
     def user_login(self):
         client = APIClient()
         client.force_login(user=self.user)
-        client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.refresh.access_token}')
+        client.cookies['access_token'] = str(self.refresh.access_token)
         return client
 
     def test_successful_patch_request(self, mock_upload_file):

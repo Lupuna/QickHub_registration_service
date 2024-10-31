@@ -18,7 +18,6 @@ class RegistrationAPIView(APIView):
     @extend_schema(request=UserImportantSerializer, responses=response_for_registration)
     def post(self, request):
         serializer = UserImportantSerializer(data=request.data)
-
         if serializer.is_valid():
             user = serializer.save()
             refresh = RefreshToken.for_user(user)
@@ -35,7 +34,6 @@ class RegistrationAPIView(APIView):
                 key='access_token',
                 value=str(refresh.access_token),
             )
-
             return response
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -58,7 +56,6 @@ class LoginAPIView(APIView):
             'user_id': user.id,
             'email': user.email
         })
-
         response = Response({}, status=status.HTTP_200_OK)
         response.set_cookie(
             key='refresh_token',
@@ -68,7 +65,6 @@ class LoginAPIView(APIView):
             key='access_token',
             value=str(refresh.access_token),
         )
-
         return response
 
 
@@ -131,7 +127,6 @@ class TokenRefreshView(APIView):
         refresh_token = request.COOKIES.get('refresh_token')
         if not refresh_token:
             return Response({'error': 'Refresh token is required in cookies'}, status=status.HTTP_400_BAD_REQUEST)
-
         try:
             refresh = RefreshToken(refresh_token)
             new_access_token = str(refresh.access_token)
@@ -145,7 +140,6 @@ class TokenRefreshView(APIView):
                 key='refresh_token',
                 value=new_refresh_token,
             )
-
             return response
         except InvalidToken:
             return Response({'error': 'Invalid refresh token'}, status=status.HTTP_401_UNAUTHORIZED)
