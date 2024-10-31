@@ -72,7 +72,7 @@ class RegistrationAPITestCase(APITestCase):
             last_name=self.user_data['last_name'],
         )
         refresh = RefreshToken.for_user(user)
-        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {refresh.access_token}')
+        self.client.cookies['access_token'] = str(refresh.access_token)
         self.client.cookies['refresh_token'] = str(refresh)
         response = self.client.post(self.logout_url)
         self.assertEqual(response.status_code, status.HTTP_205_RESET_CONTENT)
@@ -85,7 +85,7 @@ class RegistrationAPITestCase(APITestCase):
             last_name=self.user_data['last_name'],
         )
         refresh = RefreshToken.for_user(user)
-        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {refresh.access_token}')
+        self.client.cookies['access_token'] = str(refresh.access_token)
         response = self.client.post(self.logout_url)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('error', response.data)
@@ -161,8 +161,8 @@ class UpdateImportantDataAPIViewTestCase(APITestCase):
     def test_successful_patch_request(self):
         client = APIClient()
         client.force_login(user=self.user)
-        client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.refresh.access_token}')
         client.cookies['refresh_token'] = str(self.refresh)
+        client.cookies['access_token'] = str(self.refresh.access_token)
         response = client.patch(self.url, self.data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.user.refresh_from_db()
@@ -171,7 +171,7 @@ class UpdateImportantDataAPIViewTestCase(APITestCase):
     def test_missing_data_to_update(self):
         client = APIClient()
         client.force_login(user=self.user)
-        client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.refresh.access_token}')
+        client.cookies['access_token'] = str(self.refresh.access_token)
         response = client.patch(self.url, self.data_without_data_to_update, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data['error'], 'data_to_update is required')
@@ -180,7 +180,7 @@ class UpdateImportantDataAPIViewTestCase(APITestCase):
         client = APIClient()
         client.force_login(user=self.user)
         client.cookies['refresh_token'] = str(self.refresh)
-        client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.refresh.access_token}')
+        client.cookies['access_token'] = str(self.refresh.access_token)
         response = client.patch(self.url, self.data_without_password, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data['error'], 'Current password is required')
@@ -188,7 +188,7 @@ class UpdateImportantDataAPIViewTestCase(APITestCase):
     def test_invalid_password(self):
         client = APIClient()
         client.force_login(user=self.user)
-        client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.refresh.access_token}')
+        client.cookies['access_token'] = str(self.refresh.access_token)
         client.cookies['refresh_token'] = str(self.refresh)
         response = client.patch(self.url, self.data_with_invalid_password, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
