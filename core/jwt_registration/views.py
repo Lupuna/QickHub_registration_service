@@ -29,7 +29,7 @@ class RegistrationAPIView(APIView):
             response.set_cookie(
                 key='refresh_token',
                 value=str(refresh),
-                samesite='None',
+                samesite='Lax',
             )
             response.set_cookie(
                 key='access_token',
