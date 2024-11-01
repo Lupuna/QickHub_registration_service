@@ -34,7 +34,7 @@ class RegistrationAPIView(APIView):
             response.set_cookie(
                 key='access_token',
                 value=str(refresh.access_token),
-                samesite='None',
+                samesite='Lax',
             )
             return response
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -62,12 +62,12 @@ class LoginAPIView(APIView):
         response.set_cookie(
             key='refresh_token',
             value=str(refresh),
-            samesite='None',
+            samesite='Lax',
         )
         response.set_cookie(
             key='access_token',
             value=str(refresh.access_token),
-            samesite='None',
+            samesite='Lax',
         )
         return response
 
@@ -104,12 +104,12 @@ class UpdateImportantDataAPIView(APIView):
             response.set_cookie(
                 key='refresh_token',
                 value=str(refresh),
-                samesite='None',
+                samesite='Lax',
             )
             response.set_cookie(
                 key='access_token',
                 value=str(refresh.access_token),
-                samesite='None',
+                samesite='Lax',
             )
             return response
 
@@ -141,12 +141,12 @@ class TokenRefreshView(APIView):
             response.set_cookie(
                 key='access_token',
                 value=new_access_token,
-                samesite='None',
+                samesite='Lax',
             )
             response.set_cookie(
                 key='refresh_token',
                 value=new_refresh_token,
-                samesite='None',
+                samesite='Lax',
             )
             return response
         except InvalidToken:
