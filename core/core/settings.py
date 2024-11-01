@@ -8,7 +8,6 @@ from dotenv import load_dotenv
 from loguru import logger
 
 from core.loguru_handler import InterceptHandler
-
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -165,6 +164,9 @@ CACHES = {
     }
 }
 CELERY_BROKER_URL = 'redis://redis:6379/0'
+
+CSRF_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_SAMESITE = 'Lax'
 
 LOGGING = {
     'version': 1,
