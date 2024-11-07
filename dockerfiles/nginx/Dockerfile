@@ -6,4 +6,4 @@ RUN update-ca-certificates
 
 COPY ../../conf/nginx.conf /etc/nginx/nginx.conf
 
-COPY ../../core/static /static
+COPY ../../../core/static /static
