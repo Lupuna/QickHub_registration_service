@@ -3,6 +3,7 @@ version: '3.8'
 x-worker-template: &worker-template
   build:
     context: .
+    dockerfile: dockerfiles/web_app/Dockerfile
   entrypoint: celery
   command: -A celery_app.app worker --loglevel=info
   volumes:
@@ -20,6 +21,7 @@ services:
   web-app:
     build:
       context: .
+      dockerfile: dockerfiles/web_app/Dockerfile
     ports:
       - "8000:8000"
     volumes:
@@ -64,6 +66,7 @@ services:
   flower:
     build:
       context: .
+      dockerfile: dockerfiles/web_app/Dockerfile
     hostname: flower
     entrypoint: celery
     command: -A celery_app.app flower

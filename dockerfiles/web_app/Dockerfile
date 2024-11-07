@@ -1,7 +1,7 @@
 FROM python:3.12-alpine3.20
 
-COPY requirements.txt /temp/requirements.txt
-COPY core /core
+COPY ../../requirements.txt /temp/requirements.txt
+COPY ../../../core /core
 WORKDIR /core
 EXPOSE 8000
 
