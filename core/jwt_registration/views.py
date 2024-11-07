@@ -11,6 +11,7 @@ from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from core.swagger_info import *
 from jwt_registration.serializers import UserImportantSerializer
 from jwt_registration.utils import put_token_on_blacklist
+from django.db import transaction
 
 
 class RegistrationAPIView(APIView):
@@ -19,7 +20,10 @@ class RegistrationAPIView(APIView):
     def post(self, request):
         serializer = UserImportantSerializer(data=request.data)
         if serializer.is_valid():
-            user = serializer.save()
+            with transaction.atomic():
+                user = serializer.save(commit=False)
+                company_response = ()
+
             refresh = RefreshToken.for_user(user)
             refresh.payload.update({
                 'user_id': user.id,
