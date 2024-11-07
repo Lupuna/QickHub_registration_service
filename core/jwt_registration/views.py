@@ -10,7 +10,7 @@ from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 
 from core.swagger_info import *
 from jwt_registration.serializers import UserImportantSerializer
-from jwt_registration.utils import put_token_on_blacklist
+from jwt_registration.utils import put_token_on_blacklist, HeadTwoCommitsPattern, generate_response_with_cookie_200
 from django.db import transaction
 
 
@@ -21,8 +21,20 @@ class RegistrationAPIView(APIView):
         serializer = UserImportantSerializer(data=request.data)
         if serializer.is_valid():
             with transaction.atomic():
-                user = serializer.save(commit=False)
-                company_response = ()
+                user = serializer.save()
+                head = HeadTwoCommitsPattern(
+                    data={
+                        'email': user.email,
+                    },
+                    path_packege={
+                        'company': {
+                            'create': 'api/v1/company/registration/',
+                            'confirm': 'api/v1/company/registration/',
+                            'rollback': 'api/v1/company/registration/'
+                        },
+                    }
+                )
+                head.two_commits_operation()
 
             refresh = RefreshToken.for_user(user)
             refresh.payload.update({
@@ -60,16 +72,7 @@ class LoginAPIView(APIView):
             'user_id': user.id,
             'email': user.email
         })
-        response = Response({}, status=status.HTTP_200_OK)
-        response.set_cookie(
-            key='refresh_token',
-            value=str(refresh),
-        )
-        response.set_cookie(
-            key='access_token',
-            value=str(refresh.access_token),
-        )
-        return response
+        return generate_response_with_cookie_200(str(refresh), str(refresh.access_token))
 
 
 class LogoutAPIView(APIView):
@@ -100,16 +103,7 @@ class UpdateImportantDataAPIView(APIView):
             put_token_on_blacklist(old_refresh_token)
             user = serializer.save()
             refresh = RefreshToken.for_user(user)
-            response = Response({}, status=status.HTTP_200_OK)
-            response.set_cookie(
-                key='refresh_token',
-                value=str(refresh),
-            )
-            response.set_cookie(
-                key='access_token',
-                value=str(refresh.access_token),
-            )
-            return response
+            return generate_response_with_cookie_200(str(refresh), str(refresh.access_token))
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -133,18 +127,7 @@ class TokenRefreshView(APIView):
             return Response({'error': 'Refresh token is required in cookies'}, status=status.HTTP_400_BAD_REQUEST)
         try:
             refresh = RefreshToken(refresh_token)
-            new_access_token = str(refresh.access_token)
-            new_refresh_token = str(refresh)
-            response = Response({}, status=status.HTTP_200_OK)
-            response.set_cookie(
-                key='access_token',
-                value=new_access_token,
-            )
-            response.set_cookie(
-                key='refresh_token',
-                value=new_refresh_token,
-            )
-            return response
+            return generate_response_with_cookie_200(str(refresh), str(refresh.access_token))
         except InvalidToken:
             return Response({'error': 'Invalid refresh token'}, status=status.HTTP_401_UNAUTHORIZED)
 
