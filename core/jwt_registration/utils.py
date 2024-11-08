@@ -46,11 +46,11 @@ class HeadTwoCommitsPattern:
             raise creation_errors
 
         confirm_statuses_codes = self._confirm_object()
-        creation_errors = [TwoCommitsError({'error': f'{service} two commits creation problem'}) for
-                           service, status_code in confirm_statuses_codes.items() if status_code != 200]
-        if creation_errors:
+        confirm_errors = [TwoCommitsError({'error': f'{service} two commits creation problem'}) for
+                          service, status_code in confirm_statuses_codes.items() if status_code != 200]
+        if confirm_errors:
             self._rollback_object()
-            raise creation_errors
+            raise confirm_errors
 
     def _create_object(self):
         company_response = requests.post(
