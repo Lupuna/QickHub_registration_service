@@ -6,7 +6,7 @@ from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from core.exeptions import TwoCommitsError
-from jwt_registration.utils import HeadTwoCommitsPattern
+from jwt_registration.utils import HeadTwoCommitsPattern, generate_response_with_cookie_200
 from jwt_registration.utils import put_token_on_blacklist
 from user_profile.models import User
 
@@ -42,7 +42,7 @@ class HeadTwoCommitsPatternTestCase(TestCase):
         self.data = {
             'email': 'test_email@gmail.com'
         }
-        self.path_packege = {
+        self.self_package = {
             'company': {
                 'create': 'fake_path_create',
                 'confirm': 'fake_path_confirm',
@@ -51,7 +51,7 @@ class HeadTwoCommitsPatternTestCase(TestCase):
         }
         self.head = HeadTwoCommitsPattern(
             data=self.data,
-            path_packege=self.path_packege
+            self_package=self.self_package
         )
 
     def test__create_object(self):
@@ -96,3 +96,13 @@ class HeadTwoCommitsPatternTestCase(TestCase):
             self.head.two_commits_operation()
         except Exception as e:
             self.fail(f"two_commits_operation вызвал исключение: {e}")
+
+
+class GenerateResponseWithCookie200TestCase(TestCase):
+
+    def test_generate_response_with_cookie_200(self):
+        response = generate_response_with_cookie_200('test', 'test')
+        self.assertTrue(response.cookies.get('refresh_token') is not None)
+        self.assertTrue(response.cookies.get('access_token') is not None)
+
+

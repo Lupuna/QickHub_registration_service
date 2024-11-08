@@ -30,12 +30,11 @@ class CookieJWTAuthentication(JWTAuthentication):
         return user_id
 
 
-# TODO: написать тесты для HeadTwoCommitsPattern
 class HeadTwoCommitsPattern:
 
-    def __init__(self, data: dict | None, path_packege: dict[str]):
+    def __init__(self, data: dict | None, self_package: dict[str]):
         self.data = data
-        self.path_packege = path_packege
+        self.self_package = self_package
 
     def two_commits_operation(self):
         creation_statuses_codes = self._create_object()
@@ -54,7 +53,7 @@ class HeadTwoCommitsPattern:
 
     def _create_object(self):
         company_response = requests.post(
-            url=settings.COMPANY_SERVICE_URL.format(self.path_packege['company']['create']))
+            url=settings.COMPANY_SERVICE_URL.format(self.self_package['company']['create']))
         statuses_codes = {
             'company': company_response.status_code
         }
@@ -62,14 +61,14 @@ class HeadTwoCommitsPattern:
 
     def _confirm_object(self):
         company_response = requests.post(
-            url=settings.COMPANY_SERVICE_URL.format(self.path_packege['company']['confirm']))
+            url=settings.COMPANY_SERVICE_URL.format(self.self_package['company']['confirm']))
         statuses_codes = {
             'company': company_response.status_code
         }
         return statuses_codes
 
     def _rollback_object(self):
-        requests.post(url=settings.COMPANY_SERVICE_URL.format(self.path_packege['company']['rollback']))
+        requests.post(url=settings.COMPANY_SERVICE_URL.format(self.self_package['company']['rollback']))
 
 
 def put_token_on_blacklist(refresh_token):
@@ -81,7 +80,6 @@ def put_token_on_blacklist(refresh_token):
         raise ValidationError({'error': 'Invalid refresh token'})
 
 
-# TODO: написать тесты для generate_response_with_cookie_200
 def generate_response_with_cookie_200(refresh, access):
     response = Response({}, status=status.HTTP_200_OK)
     response.set_cookie(

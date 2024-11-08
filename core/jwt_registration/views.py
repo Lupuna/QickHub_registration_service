@@ -26,7 +26,7 @@ class RegistrationAPIView(APIView):
                     data={
                         'email': user.email,
                     },
-                    path_packege={
+                    self_package={
                         'company': {
                             'create': 'api/v1/company/registration/users/create',
                             'confirm': 'api/v1/company/registration/users/confirm',
