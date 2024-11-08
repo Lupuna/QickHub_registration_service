@@ -1,6 +1,8 @@
 import shutil
 import tempfile
 from io import BytesIO
+from unittest.mock import patch
+
 from PIL import Image
 
 from django.conf import settings
@@ -10,7 +12,6 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
-from unittest.mock import patch
 
 from user_profile.models import User
 from .test_base import Settings, mock_upload_file
