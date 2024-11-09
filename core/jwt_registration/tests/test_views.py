@@ -2,7 +2,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
-
+from unittest.mock import patch, MagicMock
 from user_profile.models import User
 
 
@@ -26,7 +26,8 @@ class RegistrationAPITestCase(APITestCase):
             'password2': 'wrong_test_pass123',
         }
 
-    def test_registration(self):
+    @patch("jwt_registration.views.HeadTwoCommitsPattern.two_commits_operation")
+    def test_registration(self, test):
         response = self.client.post(self.registration_url, self.user_data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertTrue(User.objects.filter(email=self.user_data['email']).exists())
@@ -116,7 +117,8 @@ class RegistrationAPITestCase(APITestCase):
 
 class UpdateImportantDataAPIViewTestCase(APITestCase):
     def setUp(self):
-        self.user = User.objects.create_user(email='good_email', password='password_123', first_name='first', last_name='last')
+        self.user = User.objects.create_user(email='good_email', password='password_123', first_name='first',
+                                             last_name='last')
         self.url = reverse('update_important_data')
         self.refresh = RefreshToken.for_user(self.user)
         self.data = {

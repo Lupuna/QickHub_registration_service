@@ -211,4 +211,4 @@ STORAGE_ACCESS_KEY = os.getenv('ACCESS_STORAGE_KEY')
 STORAGE_SECRET_KEY = os.getenv('SECRET_STORAGE_KEY')
 BUCKET_NAME = 'bucket-for-user-avatar'
 STORAGE_URL = f'https://s3.storage.selcloud.ru/'
-COMPANY_SERVICE_URL = '92.63.67.98:8002/company-service/'
+COMPANY_SERVICE_URL = 'http://92.63.67.98:8002/{}'
