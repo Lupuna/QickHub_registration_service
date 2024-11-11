@@ -3,7 +3,7 @@ from django.core.files.storage import FileSystemStorage
 from rest_framework import serializers
 from rest_framework.exceptions import MethodNotAllowed, ValidationError
 
-from user_profile.models import User, Link, Customization
+from user_profile.models import User, Link, Customization,Notifications,Reminders
 from user_profile.tasks import upload_file
 
 
@@ -21,17 +21,34 @@ class CustomizationSerializer(serializers.ModelSerializer):
         read_only_fields = ('id',)
 
 
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=Notifications
+        fields=('id',*(i for i in [j for j in Notifications().__dict__.keys()][2::]))
+        read_only_fields=('id',)
+
+
+class ReminderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model= Reminders
+        fields=('id',*(i for i in [j for j in Reminders().__dict__.keys()][2::]))
+        read_only_fields=('id',)
+
+
 class ProfileUserSerializer(serializers.ModelSerializer):
     image_identifier = serializers.CharField(read_only=True)
     links = LinkSerializer(many=True, required=False)
     customization = CustomizationSerializer(required=False)
+    reminder=ReminderSerializer()
+    notification=NotificationSerializer()
 
     class Meta:
         model = User
         fields = (
             'id', 'image_identifier',
             'phone', 'city', 'birthday',
-            'links', 'customization', 'first_name', 'last_name'
+            'links', 'customization', 'reminder',
+            'notification' ,'first_name' , 'last_name',
         )
         read_only_fields = ('id',)
 
@@ -40,7 +57,9 @@ class ProfileUserSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         links_data = validated_data.pop('links', [])
-        customization_data = validated_data.pop('customization', None)
+        customization_data=validated_data.get('customization',None)
+        reminder_data=validated_data.get('reminder',None)
+        notification_data=validated_data.get('notification',None)
         instance.phone = validated_data.get('phone', instance.phone)
         instance.city = validated_data.get('city', instance.city)
         instance.birthday = validated_data.get('birthday', instance.birthday)
@@ -53,6 +72,18 @@ class ProfileUserSerializer(serializers.ModelSerializer):
             for attr, value in customization_data.items():
                 setattr(customization, attr, value)
             customization.save()
+
+        if reminder_data:
+            reminder=instance.reminder
+            for attr,val in reminder_data.items():
+                setattr(reminder,attr,val)
+            reminder.save()
+
+        if notification_data:
+            notification=instance.notification
+            for attr,val in notification_data.items():
+                setattr(notification,attr,val)
+            notification.save()
 
         links_title = instance.links.all().values_list('title', flat=True)
         for link_data in links_data:
