@@ -136,4 +136,3 @@ class ImageSerializerTestCase(Settings):
         serializer = ImageSerializer(data=data)
         self.assertFalse(serializer.is_valid())
         self.assertIn('image', serializer.errors)
-

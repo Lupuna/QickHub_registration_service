@@ -63,6 +63,17 @@ class ProfileUserSerializer(serializers.ModelSerializer):
         return instance
 
 
+class ProfileUserForCompanySerializer(serializers.ModelSerializer):
+    links = LinkSerializer(many=True, required=False)
+
+    class Meta:
+        model = User
+        fields = (
+            'id', 'first_name', 'last_name',
+            'phone', 'image_identifier', 'date_joined', 'links'
+        )
+
+
 class ImageSerializer(serializers.Serializer):
     image = serializers.ImageField(required=True, write_only=True)
     user = serializers.IntegerField(required=True, write_only=True)
