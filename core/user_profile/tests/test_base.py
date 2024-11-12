@@ -7,7 +7,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.conf import settings
 from django.test import TestCase
 
-from user_profile.models import User, Customization, Link
+from user_profile.models import User, Customization, Link, Reminders, Notifications
 
 
 class Settings(TestCase):
@@ -43,6 +43,14 @@ class Settings(TestCase):
         )
 
         cls.customization = Customization.objects.create(
+            user=cls.user
+        )
+
+        cls.reminder=Reminders.objects.create(
+            user=cls.user
+        )
+
+        cls.notification=Notifications.objects.create(
             user=cls.user
         )
 

@@ -24,14 +24,14 @@ class CustomizationSerializer(serializers.ModelSerializer):
 class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model=Notifications
-        fields=('id',*(i for i in [j for j in Notifications().__dict__.keys()][2::]))
+        fields=('id',*(i for i in [j for j in Notifications().__dict__.keys()][3::]))
         read_only_fields=('id',)
 
 
 class ReminderSerializer(serializers.ModelSerializer):
     class Meta:
         model= Reminders
-        fields=('id',*(i for i in [j for j in Reminders().__dict__.keys()][2::]))
+        fields=('id',*(i for i in [j for j in Reminders().__dict__.keys()][3::]))
         read_only_fields=('id',)
 
 
@@ -39,8 +39,8 @@ class ProfileUserSerializer(serializers.ModelSerializer):
     image_identifier = serializers.CharField(read_only=True)
     links = LinkSerializer(many=True, required=False)
     customization = CustomizationSerializer(required=False)
-    reminder=ReminderSerializer()
-    notification=NotificationSerializer()
+    reminder=ReminderSerializer(required=False)
+    notification=NotificationSerializer(required=False)
 
     class Meta:
         model = User

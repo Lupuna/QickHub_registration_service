@@ -2,7 +2,7 @@ from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
 from django.utils.translation import gettext_lazy as _
 
-from user_profile.models import Link
+from user_profile.models import Link,Reminders,Notifications
 from .test_base import Settings
 
 
@@ -86,3 +86,47 @@ class TestLink(Settings):
     def test_verbose_name(self):
         self.assertEqual(self.link_1._meta.verbose_name, "Link")
         self.assertEqual(self.link_1._meta.verbose_name_plural, "Links")
+
+
+class TestReminders(Settings):
+
+    def test_str(self):
+        self.assertEqual(str(self.reminder),'id: 1  |  Days before start task: 1  |  Exact time of day before task start: 8  |  Time before deadline: 30  |  Remind about expired deadline in: В начале следующей недели')
+
+    def test_verbose_names(self):
+        self.assertEqual(self.reminder._meta.verbose_name,_('Reminder'))
+        self.assertEqual(self.reminder._meta.verbose_name_plural,_("Reminders"))
+
+    def test_default_vals(self):
+        self.assertEqual(self.reminder.days_before_start_task, 1)
+        self.assertEqual(self.reminder.exact_time_of_day_before_start_task, 8)
+        self.assertEqual(self.reminder.time_before_deadline, 30)
+        self.assertEqual(self.reminder.remind_about_expire_in, 'В начале следующей недели')
+    
+    def test_relation(self):
+        user=self.reminder.user
+        self.assertEqual(user,self.user)
+
+
+class NotificationTestCase(Settings):
+
+    def test_str(self):
+        self.assertEqual(str(self.notification),'  |  '.join([f'{attr}: {str(val)}' for attr,val in [(at,va) for at,va in self.notification.__dict__.items()][2::]]))
+    
+    def test_verbose_names(self):
+        self.assertEqual(self.notification._meta.verbose_name,_('Notification'))
+        self.assertEqual(self.notification._meta.verbose_name_plural,_("Notifications"))
+
+    def test_default_vals(self):
+        self.assertEqual(self.notification.chat_message_ring,True)
+        self.assertEqual(self.notification.chat_message_in_browser,True)
+        self.assertEqual(self.notification.is_executor_ring,True)
+        self.assertEqual(self.notification.is_executor_in_browser,True)
+        self.assertEqual(self.notification.dl_expired_ring,True)
+        self.assertEqual(self.notification.dl_expired_in_browser,True)
+        self.assertEqual(self.notification.task_done_ring,True)
+        self.assertEqual(self.notification.task_done_in_browser,True)
+
+    def test_relation(self):
+        user=self.notification.user
+        self.assertEqual(user,self.user)

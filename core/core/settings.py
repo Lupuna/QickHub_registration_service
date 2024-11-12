@@ -205,7 +205,7 @@ INTERNAL_IPS = [
 hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
 INTERNAL_IPS += [".".join(ip.split(".")[:-1] + ["1"]) for ip in ips]
 
-CACHE_LIVE_TIME = 1
+CACHE_LIVE_TIME = 60*60
 USER_PROFILE_CACHE_KEY = 'user_profile_{user}'
 STORAGE_ACCESS_KEY = os.getenv('ACCESS_STORAGE_KEY')
 STORAGE_SECRET_KEY = os.getenv('SECRET_STORAGE_KEY')
