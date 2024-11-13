@@ -9,6 +9,8 @@ from django.utils.translation import gettext_lazy as _
 
 from user_profile.managers import UserManager
 
+import datetime
+
 
 class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(_('email filed'), unique=True, blank=False)
@@ -113,3 +115,42 @@ class Link(models.Model):
 
     def __str__(self):
         return self.title
+    
+
+class Reminders(models.Model):
+    DAYS_BEFORE=[(i+1,f'За {i+1} день до') for i in range(3)]
+    EXACT_TIMES=[(i+1,f'{i+1}:00') for i in range(23)]
+    TIMES_BEFORE_DL=[(i+1,f'За {i+1} минут до') for i in range(59)]
+    REMIND_EXPIRE=[('В начале следующей недели','В начале следующей недели')]
+
+    user=models.OneToOneField(User, on_delete=models.CASCADE, related_name='reminder')
+    days_before_start_task=models.IntegerField(choices=DAYS_BEFORE, default=1) 
+    exact_time_of_day_before_start_task=models.IntegerField(choices=EXACT_TIMES, default=8)
+    time_before_deadline=models.IntegerField(choices=TIMES_BEFORE_DL, default=30)
+    remind_about_expire_in=models.CharField(choices=REMIND_EXPIRE, default='В начале следующей недели')
+
+    class Meta:
+        verbose_name=_('Reminder')
+        verbose_name_plural=_('Reminders')
+
+    def __str__(self): 
+        return '  |  '.join([f'{attr}: {str(val)}' for attr,val in [(at,va) for at,va in self.__dict__.items()][2::]])
+
+
+class Notifications(models.Model):
+    user=models.OneToOneField(User, on_delete=models.CASCADE, related_name='notification')
+    chat_message_ring=models.BooleanField(default=True)
+    chat_message_in_browser=models.BooleanField(default=True)
+    is_executor_ring=models.BooleanField(default=True)
+    is_executor_in_browser=models.BooleanField(default=True)
+    dl_expired_ring=models.BooleanField(default=True)
+    dl_expired_in_browser=models.BooleanField(default=True)
+    task_done_ring=models.BooleanField(default=True)
+    task_done_in_browser=models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name=_('Notification')
+        verbose_name_plural=_('Notifications')
+
+    def __str__(self) -> str:
+        return '  |  '.join([f'{attr}: {str(val)}' for attr,val in [(at,va) for at,va in self.__dict__.items()][2::]])
