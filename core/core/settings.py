@@ -22,7 +22,7 @@ load_dotenv()
 DEBUG = os.environ.get('IS_DEBUG', False)
 
 
-ALLOWED_HOSTS = ["localhost", "92.63.67.98", '127.0.0.1', 'registration_service']
+ALLOWED_HOSTS = ["localhost", "92.63.67.98", '127.0.0.1']
 
 
 # Application definition
