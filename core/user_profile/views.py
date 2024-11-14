@@ -10,7 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet, ReadOnlyModelViewSet
-from jwt_registration.utils import CookieJWTAuthentication
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from core.swagger_info import response_for_upload_image, request_for_upload_image
 from user_profile.models import User
@@ -45,7 +45,7 @@ class ImageAPIView(APIView):
 
     @extend_schema(request=request_for_upload_image, responses=response_for_upload_image)
     def post(self, request):
-        user_id = CookieJWTAuthentication().get_user_id_in_jwt_token(request)
+        user_id = self._get_user_id_in_jwt_token(request)
         image = request.data.get('image')
         self._validate_update_request(image)
         serializer = ImageSerializer(data={'image': image, 'user': user_id})
@@ -59,6 +59,14 @@ class ImageAPIView(APIView):
     def _validate_update_request(image):
         if not image:
             raise ValidationError({'error': 'image is required'})
+
+    @staticmethod
+    def _get_user_id_in_jwt_token(request):
+        auth = JWTAuthentication()
+        header = auth.get_header(request)
+        validated_token = auth.get_validated_token(auth.get_raw_token(header))
+        user_id = validated_token.get('user_id')
+        return user_id
 
 
 @extend_schema(

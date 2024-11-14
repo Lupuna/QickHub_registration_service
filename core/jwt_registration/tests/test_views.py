@@ -73,10 +73,10 @@ class RegistrationAPITestCase(APITestCase):
             last_name=self.user_data['last_name'],
         )
         refresh = RefreshToken.for_user(user)
-        self.client.cookies['access_token'] = str(refresh.access_token)
-        self.client.cookies['refresh_token'] = str(refresh)
-        response = self.client.post(self.logout_url)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {refresh.access_token}')
+        response = self.client.post(self.logout_url, {'refresh_token': str(refresh)})
         self.assertEqual(response.status_code, status.HTTP_205_RESET_CONTENT)
+        self.assertEqual(response.data.get('detail'), 'Successfully logged out')
 
     def test_logout_without_refresh_token(self):
         user = User.objects.create_user(
@@ -86,7 +86,7 @@ class RegistrationAPITestCase(APITestCase):
             last_name=self.user_data['last_name'],
         )
         refresh = RefreshToken.for_user(user)
-        self.client.cookies['access_token'] = str(refresh.access_token)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {refresh.access_token}')
         response = self.client.post(self.logout_url)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('error', response.data)
@@ -117,14 +117,14 @@ class RegistrationAPITestCase(APITestCase):
 
 class UpdateImportantDataAPIViewTestCase(APITestCase):
     def setUp(self):
-        self.user = User.objects.create_user(email='good_email', password='password_123', first_name='first', last_name='last')
+        self.user = User.objects.create_user(email='test_email@gmail.com', password='password_123', first_name='first', last_name='last')
         self.url = reverse('update_important_data')
         self.refresh = RefreshToken.for_user(self.user)
         self.data = {
             'data_to_update': {
                 'password': 'password_123',
                 'password2': 'password_123',
-                'email': 'newemail@gmail.com'
+                'email': 'test_email@gmail.com'
             },
             'refresh_token': str(self.refresh),
             'password': 'password_123'
@@ -139,7 +139,7 @@ class UpdateImportantDataAPIViewTestCase(APITestCase):
             'data_to_update': {
                 'password': 'password_123',
                 'password2': 'password_123',
-                'email': 'newemail@gmail.com'
+                'email': 'test_email@gmail.com'
             },
             'password': 'password_123'
         }
@@ -148,7 +148,7 @@ class UpdateImportantDataAPIViewTestCase(APITestCase):
             'data_to_update': {
                 'password': 'password_123',
                 'password2': 'password_123',
-                'email': 'newemail@gmail.com'
+                'email': 'test_email@gmail.com'
             },
             'refresh_token': str(self.refresh),
         }
@@ -157,7 +157,7 @@ class UpdateImportantDataAPIViewTestCase(APITestCase):
             'data_to_update': {
                 'password': 'password_123',
                 'password2': 'password_123',
-                'email': 'newemail@gmail.com'
+                'email': 'test_email@gmail.com'
             },
             'refresh_token': str(self.refresh),
             'password': 'wrong_password'
@@ -170,9 +170,9 @@ class UpdateImportantDataAPIViewTestCase(APITestCase):
         response = client.patch(self.url, self.data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.user.refresh_from_db()
-        self.assertEqual(self.user.email, 'newemail@gmail.com')
-        self.assertIn('refresh', response.data)
-        self.assertIn('access', response.data)
+        self.assertEqual(self.user.email, self.data['data_to_update']['email'])
+        self.assertIn('refresh_token', response.data)
+        self.assertIn('access_token', response.data)
 
     def test_missing_data_to_update(self):
         client = APIClient()
@@ -210,4 +210,3 @@ class UpdateImportantDataAPIViewTestCase(APITestCase):
         client = APIClient()
         response = client.patch(self.url, self.data, format='json')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-

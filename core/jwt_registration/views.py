@@ -79,7 +79,7 @@ class LogoutAPIView(APIView):
 
     @extend_schema(request=None, responses=response_for_logout)
     def post(self, request):
-        refresh_token = request.headers.get('Authorization')
+        refresh_token = request.data.get('refresh_token')
         if not refresh_token: raise ValidationError({'error': 'Refresh token is required'})
         put_token_on_blacklist(refresh_token)
         return Response({'detail': 'Successfully logged out'}, status=status.HTTP_205_RESET_CONTENT)
@@ -91,7 +91,7 @@ class UpdateImportantDataAPIView(APIView):
     @extend_schema(request=request_for_important_info, responses=response_for_important_data)
     def patch(self, request):
         data_to_update = request.data.get('data_to_update')
-        old_refresh_token = request.COOKIES.get("refresh_token")
+        old_refresh_token = request.data.get("refresh_token")
         current_password = request.data.get('password')
         self._validate_update_request(current_password, data_to_update, old_refresh_token, request)
         serializer = UserImportantSerializer(instance=request.user, data=data_to_update, partial=True)
