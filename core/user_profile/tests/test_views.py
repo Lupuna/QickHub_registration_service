@@ -10,23 +10,22 @@ from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.test import APITestCase, APIClient
+from rest_framework.test import APITestCase, APIClient, APIRequestFactory
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from user_profile.models import User
 from .test_base import Settings, mock_upload_file
+from ..views import ProfileCompanyAPIView
 
 
 class ProfileAPIViewSetTestCase(Settings):
-
     def setUp(self):
         self.profile_url = reverse('user-detail', args=[self.user.id])
         self.refresh = RefreshToken.for_user(self.user)
 
     def user_login(self):
         client = APIClient()
-        client.force_login(user=self.user)
-        client.cookies['access_token'] = str(self.refresh.access_token)
+        client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.refresh.access_token}')
         return client
 
     def test_retrieve_with_cache(self):
@@ -39,7 +38,7 @@ class ProfileAPIViewSetTestCase(Settings):
     def test_update_invalidate_cache(self):
         client = self.user_login()
         cache_key = settings.USER_PROFILE_CACHE_KEY.format(user=self.user.pk)
-        self.client.get(self.profile_url)
+        client.get(self.profile_url)
         self.assertIsNotNone(cache.get(cache_key))
         update_data = {'email': 'updateduser@gmail.com'}
         response = client.patch(self.profile_url, update_data, format='json')
@@ -52,8 +51,7 @@ class ProfileAPIViewSetTestCase(Settings):
 
     def test_not_authenticated_user(self):
         client = APIClient()
-        client.force_login(user=self.user)
-        response = self.client.get(self.profile_url)
+        response = client.get(self.profile_url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
@@ -81,11 +79,11 @@ class UpdateImportantDataAPIViewTestCase(APITestCase):
 
     def user_login(self):
         client = APIClient()
-        client.force_login(user=self.user)
-        client.cookies['access_token'] = str(self.refresh.access_token)
+        client.force_login(self.user)
+        client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.refresh.access_token}')
         return client
 
-    def test_successful_patch_request(self, mock_upload_file):
+    def test_successful_post_request(self, mock_upload_file):
         client = self.user_login()
         response = client.post(self.url, self.data, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -110,4 +108,25 @@ class UpdateImportantDataAPIViewTestCase(APITestCase):
         file.name = 'test.jpeg'
         file.seek(0)
         return SimpleUploadedFile('test.jpeg', file.getvalue(), content_type='image/jpeg')
+
+
+class UserCompanyAPIViewSetTestCase(Settings):
+
+    def setUp(self):
+        self.factory = APIRequestFactory()
+        self.url = reverse('company_profile')
+        self.view = ProfileCompanyAPIView()
+
+    def test_get_queryset(self):
+        request = self.factory.post(self.url)
+        request.data = {
+            'emails': [self.user.email]
+        }
+        self.view.setup(request)
+        queryset = self.view.get_queryset()
+        correct_meaning = User.objects.prefetch_related('links').filter(email__in=[self.user.email]).only(
+            'id', 'first_name', 'last_name',
+            'phone', 'image_identifier', 'date_joined', 'links'
+        )
+        self.assertQuerySetEqual(queryset, correct_meaning)
 
