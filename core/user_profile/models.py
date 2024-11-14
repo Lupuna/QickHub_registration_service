@@ -134,7 +134,7 @@ class Reminders(models.Model):
         verbose_name_plural=_('Reminders')
 
     def __str__(self): 
-        return '  |  '.join([f'{attr}: {str(val)}' for attr,val in [(at,va) for at,va in self.__dict__.items()][2::]])
+        return f'days_before_start_task: {self.days_before_start_task}  |  exact_time_of_day_before_start_task: {self.exact_time_of_day_before_start_task}  |  time_before_deadline: {self.time_before_deadline}  |  remind_about_expire_in: {self.remind_about_expire_in}'
 
 
 class Notifications(models.Model):
@@ -153,4 +153,4 @@ class Notifications(models.Model):
         verbose_name_plural=_('Notifications')
 
     def __str__(self) -> str:
-        return '  |  '.join([f'{attr}: {str(val)}' for attr,val in [(at,va) for at,va in self.__dict__.items()][2::]])
+        return f'chat_message: ring={self.chat_message_ring} \ browser={self.chat_message_in_browser}  |  is_executor: ring={self.is_executor_ring} \ browser={self.is_executor_in_browser}  |  dl_expired: ring={self.dl_expired_ring} \ browser={self.dl_expired_in_browser}  |  task_done: ring={self.task_done_ring} \ browser={self.task_done_in_browser}'
