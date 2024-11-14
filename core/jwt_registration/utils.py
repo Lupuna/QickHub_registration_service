@@ -78,16 +78,3 @@ def put_token_on_blacklist(refresh_token):
     except TokenError as e:
         logger.critical(f"TokenError: {e}. It might be a potential security threat.")
         raise ValidationError({'error': 'Invalid refresh token'})
-
-
-def generate_response_with_cookie_200(refresh, access):
-    response = Response({}, status=status.HTTP_200_OK)
-    response.set_cookie(
-        key='refresh_token',
-        value=refresh,
-    )
-    response.set_cookie(
-        key='access_token',
-        value=access,
-    )
-    return response

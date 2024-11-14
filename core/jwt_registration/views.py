@@ -10,7 +10,7 @@ from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 
 from core.swagger_info import *
 from jwt_registration.serializers import UserImportantSerializer
-from jwt_registration.utils import put_token_on_blacklist, HeadTwoCommitsPattern, generate_response_with_cookie_200
+from jwt_registration.utils import put_token_on_blacklist, HeadTwoCommitsPattern
 from django.db import transaction
 
 
@@ -41,16 +41,11 @@ class RegistrationAPIView(APIView):
                 'user_id': user.id,
                 'email': user.email,
             })
-            response = Response({}, status=status.HTTP_201_CREATED)
-            response.set_cookie(
-                key='refresh_token',
-                value=str(refresh),
-            )
-            response.set_cookie(
-                key='access_token',
-                value=str(refresh.access_token),
-            )
-            return response
+            return Response(
+                {
+                    'refresh_token': str(refresh),
+                    'access_token': str(refresh.access_token)
+                }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -72,7 +67,11 @@ class LoginAPIView(APIView):
             'user_id': user.id,
             'email': user.email
         })
-        return generate_response_with_cookie_200(str(refresh), str(refresh.access_token))
+        return Response(
+            {
+                'refresh_token': str(refresh),
+                'access_token': str(refresh.access_token)
+            }, status=status.HTTP_200_OK)
 
 
 class LogoutAPIView(APIView):
@@ -80,13 +79,10 @@ class LogoutAPIView(APIView):
 
     @extend_schema(request=None, responses=response_for_logout)
     def post(self, request):
-        refresh_token = request.COOKIES.get('refresh_token')
+        refresh_token = request.headers.get('Authorization')
         if not refresh_token: raise ValidationError({'error': 'Refresh token is required'})
         put_token_on_blacklist(refresh_token)
-        response = Response({'detail': 'Successfully logged out'}, status=status.HTTP_205_RESET_CONTENT)
-        response.delete_cookie('refresh_token')
-        response.delete_cookie('access_token')
-        return response
+        return Response({'detail': 'Successfully logged out'}, status=status.HTTP_205_RESET_CONTENT)
 
 
 class UpdateImportantDataAPIView(APIView):
@@ -103,7 +99,11 @@ class UpdateImportantDataAPIView(APIView):
             put_token_on_blacklist(old_refresh_token)
             user = serializer.save()
             refresh = RefreshToken.for_user(user)
-            return generate_response_with_cookie_200(str(refresh), str(refresh.access_token))
+            return Response(
+                {
+                    'refresh_token': str(refresh),
+                    'access_token': str(refresh.access_token)
+                }, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -117,31 +117,3 @@ class UpdateImportantDataAPIView(APIView):
             raise ValidationError({'error': 'Current password is required'})
         if not request.user.check_password(current_password):
             raise ValidationError({'error': 'Current password is incorrect'})
-
-
-class TokenRefreshView(APIView):
-    @extend_schema(request=None, responses=response_for_refresh_token)
-    def post(self, request):
-        refresh_token = request.COOKIES.get('refresh_token')
-        if not refresh_token:
-            return Response({'error': 'Refresh token is required in cookies'}, status=status.HTTP_400_BAD_REQUEST)
-        try:
-            refresh = RefreshToken(refresh_token)
-            return generate_response_with_cookie_200(str(refresh), str(refresh.access_token))
-        except InvalidToken:
-            return Response({'error': 'Invalid refresh token'}, status=status.HTTP_401_UNAUTHORIZED)
-
-
-class TokenVerifyView(APIView):
-    @extend_schema(request=None, responses=response_for_validate_token)
-    def post(self, request):
-        access_token = request.COOKIES.get('access_token')
-        if not access_token:
-            return Response({'error': 'Access token is required in cookies'}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            AccessToken(access_token)
-            return Response({'detail': 'Token is valid'}, status=status.HTTP_200_OK)
-        except (InvalidToken, TokenError):
-            return Response({'error': 'Invalid token'}, status=status.HTTP_401_UNAUTHORIZED)
-
