@@ -3,22 +3,23 @@ from django.core.cache import cache
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
+from rest_framework.generics import ListAPIView
 from rest_framework.mixins import RetrieveModelMixin, UpdateModelMixin
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.viewsets import GenericViewSet
+from rest_framework.viewsets import GenericViewSet, ReadOnlyModelViewSet
 from jwt_registration.utils import CookieJWTAuthentication
 
 from core.swagger_info import response_for_upload_image, request_for_upload_image
 from user_profile.models import User
-from user_profile.serializers import ProfileUserSerializer, ImageSerializer
+from user_profile.serializers import ProfileUserSerializer, ImageSerializer, ProfileUserForCompanySerializer
 
 
 class ProfileAPIVewSet(GenericViewSet, RetrieveModelMixin, UpdateModelMixin):
     serializer_class = ProfileUserSerializer
-    queryset = User.objects.all().select_related('customization').prefetch_related('links')
+    queryset = User.objects.all().select_related('customization','reminder','notification').prefetch_related('links')
     permission_classes = (IsAuthenticated,)
 
     def get_object(self):
@@ -58,3 +59,18 @@ class ImageAPIView(APIView):
     def _validate_update_request(image):
         if not image:
             raise ValidationError({'error': 'image is required'})
+
+
+@extend_schema(
+    tags=["User for company"]
+    )
+class ProfileCompanyAPIView(ListAPIView):
+    serializer_class = ProfileUserForCompanySerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        emails = self.request.data.get('emails', [])
+        return User.objects.prefetch_related('links').filter(email__in=emails).only(
+            'id', 'first_name', 'last_name',
+            'phone', 'image_identifier', 'date_joined', 'links'
+        )

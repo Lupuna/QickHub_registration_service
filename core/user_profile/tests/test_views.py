@@ -1,6 +1,8 @@
 import shutil
 import tempfile
 from io import BytesIO
+from unittest.mock import patch
+
 from PIL import Image
 
 from django.conf import settings
@@ -8,12 +10,13 @@ from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.test import APITestCase, APIClient
+from rest_framework.request import Request
+from rest_framework.test import APITestCase, APIClient, APIRequestFactory
 from rest_framework_simplejwt.tokens import RefreshToken
-from unittest.mock import patch
 
 from user_profile.models import User
 from .test_base import Settings, mock_upload_file
+from ..views import ProfileCompanyAPIView
 
 
 class ProfileAPIViewSetTestCase(Settings):
@@ -109,4 +112,25 @@ class UpdateImportantDataAPIViewTestCase(APITestCase):
         file.name = 'test.jpeg'
         file.seek(0)
         return SimpleUploadedFile('test.jpeg', file.getvalue(), content_type='image/jpeg')
+
+
+class UserCompanyAPIViewSetTestCase(Settings):
+
+    def setUp(self):
+        self.factory = APIRequestFactory()
+        self.url = reverse('company_profile')
+        self.view = ProfileCompanyAPIView()
+
+    def test_get_queryset(self):
+        request = self.factory.post(self.url)
+        request.data = {
+            'emails': [self.user.email]
+        }
+        self.view.setup(request)
+        queryset = self.view.get_queryset()
+        correct_meaning = User.objects.prefetch_related('links').filter(email__in=[self.user.email]).only(
+            'id', 'first_name', 'last_name',
+            'phone', 'image_identifier', 'date_joined', 'links'
+        )
+        self.assertQuerySetEqual(queryset, correct_meaning)
 
