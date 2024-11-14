@@ -137,7 +137,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'jwt_registration.utils.CookieJWTAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
@@ -148,9 +148,9 @@ SIMPLE_JWT = {
 
     'BLACKLIST_AFTER_ROTATION': True,
 
-    'ACCESS_TOKEN_LIFETIME': timedelta(seconds=30),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=1),
 
-    'REFRESH_TOKEN_LIFETIME': timedelta(minutes=1),
+    'REFRESH_TOKEN_LIFETIME': timedelta(minutes=5),
 
 }
 
@@ -164,9 +164,6 @@ CACHES = {
     }
 }
 CELERY_BROKER_URL = 'redis://redis:6379/0'
-
-CSRF_COOKIE_SAMESITE = 'Lax'
-SESSION_COOKIE_SAMESITE = 'Lax'
 
 LOGGING = {
     'version': 1,
