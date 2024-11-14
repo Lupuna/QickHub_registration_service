@@ -28,7 +28,6 @@ services:
     volumes:
       - ./core/static:/static/
       - ./core:/core
-      - ./certs:/etc/nginx/certs
     environment:
       - DB_HOST=database
       - DB_NAME=dbname
