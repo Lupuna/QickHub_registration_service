@@ -45,7 +45,7 @@ class HeadTwoCommitsPattern:
         return statuses_codes
 
     def _rollback_object(self):
-        requests.post(url=settings.COMPANY_SERVICE_URL.format(self.self_package['company']['rollback']))
+        requests.post(url=settings.COMPANY_SERVICE_URL.format(self.self_package['company']['rollback'], data=self.data))
 
 
 def put_token_on_blacklist(refresh_token):
