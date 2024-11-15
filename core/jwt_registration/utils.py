@@ -30,7 +30,7 @@ class HeadTwoCommitsPattern:
 
     def _create_object(self):
         company_response = requests.post(
-            url=settings.COMPANY_SERVICE_URL.format(self.self_package['company']['create']))
+            url=settings.COMPANY_SERVICE_URL.format(self.self_package['company']['create'], data=self.data))
         statuses_codes = {
             'company': company_response.status_code
         }
@@ -38,7 +38,7 @@ class HeadTwoCommitsPattern:
 
     def _confirm_object(self):
         company_response = requests.post(
-            url=settings.COMPANY_SERVICE_URL.format(self.self_package['company']['confirm']))
+            url=settings.COMPANY_SERVICE_URL.format(self.self_package['company']['confirm'], data=self.data))
         statuses_codes = {
             'company': company_response.status_code
         }
