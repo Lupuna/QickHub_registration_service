@@ -29,8 +29,10 @@ class HeadTwoCommitsPattern:
             raise confirm_errors
 
     def _create_object(self):
+        print(self.data)
         company_response = requests.post(
-            url=settings.COMPANY_SERVICE_URL.format(self.self_package['company']['create'], data=self.data))
+            url=settings.COMPANY_SERVICE_URL.format(self.self_package['company']['create']), data=self.data)
+        print(company_response.json())
         statuses_codes = {
             'company': company_response.status_code
         }
@@ -38,14 +40,14 @@ class HeadTwoCommitsPattern:
 
     def _confirm_object(self):
         company_response = requests.post(
-            url=settings.COMPANY_SERVICE_URL.format(self.self_package['company']['confirm'], data=self.data))
+            url=settings.COMPANY_SERVICE_URL.format(self.self_package['company']['confirm']), data=self.data)
         statuses_codes = {
             'company': company_response.status_code
         }
         return statuses_codes
 
     def _rollback_object(self):
-        requests.post(url=settings.COMPANY_SERVICE_URL.format(self.self_package['company']['rollback'], data=self.data))
+        requests.post(url=settings.COMPANY_SERVICE_URL.format(self.self_package['company']['rollback']), data=self.data)
 
 
 def put_token_on_blacklist(refresh_token):
