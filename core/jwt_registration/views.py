@@ -28,9 +28,9 @@ class RegistrationAPIView(APIView):
                     },
                     self_package={
                         'company': {
-                            'create': 'api/v1/company/registration/users/create',
-                            'confirm': 'api/v1/company/registration/users/confirm',
-                            'rollback': 'api/v1/company/registration/users/rollback'
+                            'create': 'api/v1/company/registration/users/create/',
+                            'confirm': 'api/v1/company/registration/users/confirm/',
+                            'rollback': 'api/v1/company/registration/users/rollback/'
                         },
                     }
                 )
