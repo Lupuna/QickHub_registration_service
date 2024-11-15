@@ -23,7 +23,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         null=True,
     )
     image_identifier = models.UUIDField(
-        default=uuid.uuid4(),
+        default=uuid.uuid4,
         editable=False,
         unique=True,
         help_text=_('uuid for image')
