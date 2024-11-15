@@ -29,10 +29,8 @@ class HeadTwoCommitsPattern:
             raise confirm_errors
 
     def _create_object(self):
-        print(self.data)
         company_response = requests.post(
             url=settings.COMPANY_SERVICE_URL.format(self.self_package['company']['create']), data=self.data)
-        print(company_response.json())
         statuses_codes = {
             'company': company_response.status_code
         }
