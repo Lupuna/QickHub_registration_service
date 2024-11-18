@@ -5,8 +5,7 @@ from rest_framework.exceptions import ValidationError, AuthenticationFailed
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
-from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from core.swagger_info import *
 from jwt_registration.serializers import UserImportantSerializer
@@ -77,7 +76,7 @@ class LoginAPIView(APIView):
 class LogoutAPIView(APIView):
     permission_classes = (IsAuthenticated,)
 
-    @extend_schema(request=None, responses=response_for_logout)
+    @extend_schema(request=request_for_logout, responses=response_for_logout)
     def post(self, request):
         refresh_token = request.data.get('refresh_token')
         if not refresh_token: raise ValidationError({'error': 'Refresh token is required'})
