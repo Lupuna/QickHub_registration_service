@@ -7,7 +7,6 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
-
 from core.swagger_info import *
 from jwt_registration.serializers import UserImportantSerializer
 from jwt_registration.utils import put_token_on_blacklist, HeadTwoCommitsPattern
