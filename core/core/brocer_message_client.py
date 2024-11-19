@@ -6,7 +6,7 @@ from loguru import logger
 
 class RabbitMQClient:
 
-    def __init__(self, host=None, exchange='', queue=None):
+    def __init__(self, host=None, exchange=None, queue=None):
         self.connection_params = ConnectionParameters(host=host or settings.RABBITMQ_HOST)
         self.queue = queue or settings.RABBITMQ_QUEUE
         self.exchange = exchange or settings.RABBITMQ_EXCHANGE
