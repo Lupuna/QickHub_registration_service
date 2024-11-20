@@ -74,9 +74,10 @@ class ProfileAPIViewSetTestCase(Settings):
         client = self.user_login()
         users_expected = [{'id': 1, 'first_name': 'test_first_name_1', 'last_name': 'test_last_name_!', 'phone': None, 'image_identifier': self.user.image_identifier, 'date_joined': self.user.date_joined, 'links': [{'id': 1, 'title': 'test_link_1', 'link': 'https://code.djangoproject.com/wiki/IntegrityError'}, {'id': 2, 'title': 'test_link_2', 'link': 'https://code.djangoproject.com/wiki/IntegrityError'}, {'id': 3, 'title': 'test_link_3', 'link': 'https://code.djangoproject.com/wiki/IntegrityError'}]}]
         
-        response = client.get('http://127.0.0.1:8000'+reverse('user-get_users_by_company',kwargs={"company_pk":1}), HTTP_HOST='127.0.0.1')
+        with self.assertNumQueries(3):
+            response = client.get('http://127.0.0.1:8000'+reverse('user-get_users_by_company',kwargs={"company_pk":1}), HTTP_HOST='127.0.0.1')
+            self.assertEqual(users_expected, response.data)
 
-        self.assertEqual(users_expected, response.data)
 
 
 @patch('user_profile.serializers.upload_file', side_effect=mock_upload_file)

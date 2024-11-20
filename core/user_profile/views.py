@@ -50,7 +50,7 @@ class ProfileAPIVewSet(GenericViewSet, RetrieveModelMixin, UpdateModelMixin):
         users_list = response_data.get('users', [])
         users_emails = [user.get('email',None) for user in users_list]
 
-        users = User.objects.filter(email__in=users_emails)
+        users = User.objects.filter(email__in=users_emails).prefetch_related('links')
         users_info = ProfileUserForCompanySerializer(users, many=True)
         return Response(users_info.data, status=status.HTTP_200_OK)
 
