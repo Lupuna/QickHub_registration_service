@@ -41,7 +41,7 @@ class RabbitMQClient:
             )
             ch.start_consuming()
 
+    # TODO: Дописать суда редиркет на нужный url сервиса с проверкой на выполнение запроса
     @staticmethod
     def base_callback(channel, method, properties, body):
-
         channel.basic_ack(delivery_tag=method.delivery_tag)
