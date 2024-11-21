@@ -1,7 +1,8 @@
 import shutil
 import tempfile
 from io import BytesIO
-from unittest.mock import patch
+from unittest.mock import patch,MagicMock
+import requests
 
 from PIL import Image
 
@@ -13,6 +14,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase, APIClient, APIRequestFactory
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from user_profile.serializers import ProfileUserForCompanySerializer
 from user_profile.models import User
 from .test_base import Settings, mock_upload_file
 from ..views import ProfileCompanyAPIView
@@ -53,6 +55,29 @@ class ProfileAPIViewSetTestCase(Settings):
         client = APIClient()
         response = client.get(self.profile_url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    @patch('user_profile.views.requests.get')
+    def test_get_users_info_by_company(self, mock_get):
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "id": 1,
+            "title": "Членососы",
+            "users": [
+                {
+                    "id": 1,
+                    "email": "admin@gmail.com"
+                }
+            ]
+        }
+        mock_get.return_value = mock_response
+        client = self.user_login()
+        users_expected = [{'id': 1, 'first_name': 'test_first_name_1', 'last_name': 'test_last_name_!', 'phone': None, 'image_identifier': self.user.image_identifier, 'date_joined': self.user.date_joined, 'links': [{'id': 1, 'title': 'test_link_1', 'link': 'https://code.djangoproject.com/wiki/IntegrityError'}, {'id': 2, 'title': 'test_link_2', 'link': 'https://code.djangoproject.com/wiki/IntegrityError'}, {'id': 3, 'title': 'test_link_3', 'link': 'https://code.djangoproject.com/wiki/IntegrityError'}]}]
+        
+        with self.assertNumQueries(3):
+            response = client.get('http://127.0.0.1:8000'+reverse('user-get_users_by_company',kwargs={"company_pk":1}), HTTP_HOST='127.0.0.1')
+            self.assertEqual(users_expected, response.data)
+
 
 
 @patch('user_profile.serializers.upload_file', side_effect=mock_upload_file)

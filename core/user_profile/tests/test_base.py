@@ -18,10 +18,12 @@ class Settings(TestCase):
 
         settings.MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
         cls.user = User.objects.create_user(
-            email='test_email@gmail.com',
+            email='admin@gmail.com',
             password='test_password',
             first_name='test_first_name_1',
-            last_name='test_last_name_!'
+            last_name='test_last_name_!',
+            image_identifier = 'd14fd3b8-2f36-4793-87e5-ae5ac108c237',
+            date_joined = '2024-11-19T18:12:03.445840Z'
         )
 
         cls.link_1 = Link.objects.create(
