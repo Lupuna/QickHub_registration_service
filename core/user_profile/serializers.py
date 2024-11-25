@@ -13,6 +13,20 @@ class LinkSerializer(serializers.ModelSerializer):
         fields = ('id', 'title', 'link')
         read_only_fields = ('id',)
 
+class PositionForUsersInfoSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    title = serializers.CharField()
+    description = serializers.CharField()
+    access_weight = serializers.CharField()
+    company = serializers.IntegerField()
+
+
+class DepartmentForUsersInfoSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    title = serializers.CharField()
+    description = serializers.CharField()
+    parent = serializers.CharField()
+    color = serializers.CharField()
 
 class CustomizationSerializer(serializers.ModelSerializer):
     class Meta:
@@ -96,12 +110,14 @@ class ProfileUserSerializer(serializers.ModelSerializer):
 
 class ProfileUserForCompanySerializer(serializers.ModelSerializer):
     links = LinkSerializer(many=True, required=False)
+    positions = PositionForUsersInfoSerializer(many=True, required=False)
+    departments = DepartmentForUsersInfoSerializer(many=True, required=False)
 
     class Meta:
         model = User
         fields = (
-            'id', 'first_name', 'last_name',
-            'phone', 'image_identifier', 'date_joined', 'links'
+            'id', 'email', 'first_name', 'last_name',
+            'phone', 'image_identifier', 'date_joined', 'links', 'positions', 'departments',
         )
 
 

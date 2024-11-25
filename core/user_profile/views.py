@@ -42,16 +42,27 @@ class ProfileAPIVewSet(GenericViewSet, RetrieveModelMixin, UpdateModelMixin):
     
     @action(methods=['get'], detail=False, url_path='users-info-by-company/(?P<company_pk>\d+)', url_name='get_users_by_company')
     def get_users_by_company(self, request, company_pk):
-        url = settings.COMPANY_SERVICE_URL.format(f'api/v1/company/companies/{company_pk}/')
+        url = settings.COMPANY_SERVICE_URL.format(f'api/v1/company/companies/{company_pk}/users-emails/')
         response = requests.get(url=url)
         if response.status_code != 200:
             return Response({'detail':"company info wasn't get"}, status=response.status_code)
         response_data = response.json()
-        users_list = response_data.get('users', [])
-        users_emails = [user.get('email',None) for user in users_list]
 
-        users = User.objects.filter(email__in=users_emails).prefetch_related('links')
+        users_pos_deps = [(user.get('positions', None), user.get('departments', None)) for user in response_data]
+        emails = [user.get('email', None) for user in response_data]
+
+        users = User.objects.filter(email__in=emails).prefetch_related('links')
         users_info = ProfileUserForCompanySerializer(users, many=True)
+        users_info_serialized_data = list(users_info.data)
+
+        for i in range(len(emails)):
+            for user_info in users_info_serialized_data:
+                if emails[i] == user_info['email']:
+                    user_info['positions'] = users_pos_deps[i][0]
+                    user_info['departments'] = users_pos_deps[i][1]
+        users_info = ProfileUserForCompanySerializer(users_info_serialized_data, many=True)
+
+
         return Response(users_info.data, status=status.HTTP_200_OK)
 
 
