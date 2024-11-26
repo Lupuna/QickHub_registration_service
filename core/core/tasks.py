@@ -5,7 +5,7 @@ from core.brocer_message_client import RabbitMQClient
 
 
 @shared_task
-def ai_consume_messages(callback_path=None, queue=None):
+def async_consume_messages(callback_path=None, queue=None):
     client = RabbitMQClient(queue=queue)
     callback = RabbitMQClient.base_callback
     if callback_path:

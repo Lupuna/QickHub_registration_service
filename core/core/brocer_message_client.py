@@ -2,6 +2,8 @@ from contextlib import contextmanager
 from django.conf import settings
 from pika import ConnectionParameters, BlockingConnection
 from loguru import logger
+from requests import request
+import json
 
 
 class RabbitMQClient:
@@ -41,7 +43,21 @@ class RabbitMQClient:
             )
             ch.start_consuming()
 
-    # TODO: Дописать суда редиркет на нужный url сервиса с проверкой на выполнение запроса
     @staticmethod
     def base_callback(channel, method, properties, body):
-        channel.basic_ack(delivery_tag=method.delivery_tag)
+        try:
+            message = body.decode('utf-8')
+            data = json.loads(message)
+            logger.info(f"Received message: {message}, \n {data}")
+            endpoint = data.get("endpoint")
+            payload = data.get("payload")
+            method_type = data.get("method", "POST").upper()
+
+            if not endpoint:
+                logger.error("No endpoint provided in message")
+                raise ValueError("Missing 'endpoint' in message")
+            request(method_type, endpoint, json=payload, timeout=10)
+        except Exception as e:
+            logger.error(f"Error in base_callback: {e}")
+        finally:
+            channel.basic_ack(delivery_tag=method.delivery_tag, requeue=False)

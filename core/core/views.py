@@ -22,5 +22,5 @@ class PublishMessageAPIView(APIView):
 class ConsumeMessageAPIView(APIView):
     def get(self, request):
         queue = request.data.get("queue")
-        ai_consume_messages.delay(queue)
+        async_consume_messages.delay(queue)
         return Response({"status": "Consuming task started"})
