@@ -60,22 +60,54 @@ class ProfileAPIViewSetTestCase(Settings):
     def test_get_users_info_by_company(self, mock_get):
         mock_response = MagicMock()
         mock_response.status_code = 200
-        mock_response.json.return_value = {
-            "id": 1,
-            "title": "Членососы",
-            "users": [
-                {
-                    "id": 1,
-                    "email": "admin@gmail.com"
-                }
-            ]
-        }
+        mock_response.json.return_value = [ 
+            {
+                "email": "us@example.com",
+                "positions": [
+                    {
+                        "id": 4,
+                        "title": "Водолаз",
+                        "description": "string",
+                        "access_weight": "Owner",
+                        "company": 1,
+                        "users": [
+                            {
+                                "id": 2,
+                                "email": "us@example.com"
+                            }
+                        ]
+                    }
+                ],
+                "departments": []
+            }
+        ]
         mock_get.return_value = mock_response
         client = self.user_login()
-        users_expected = [{'id': 1, 'first_name': 'test_first_name_1', 'last_name': 'test_last_name_!', 'phone': None, 'image_identifier': self.user.image_identifier, 'date_joined': self.user.date_joined, 'links': [{'id': 1, 'title': 'test_link_1', 'link': 'https://code.djangoproject.com/wiki/IntegrityError'}, {'id': 2, 'title': 'test_link_2', 'link': 'https://code.djangoproject.com/wiki/IntegrityError'}, {'id': 3, 'title': 'test_link_3', 'link': 'https://code.djangoproject.com/wiki/IntegrityError'}]}]
+        users_expected = [  
+            {
+                "id": 2,
+                "email": "us@example.com",
+                "first_name": "zhumshut",
+                "last_name": "",
+                "phone": 'null',
+                "image_identifier": "c3f1b16c-8102-45b7-b8b5-666f268982fc",
+                "date_joined": "2024-11-25T04:57:29Z",
+                "links": [],
+                "positions": [
+                    {
+                        "id": 4,
+                        "title": "Водолаз",
+                        "description": "string",
+                        "access_weight": "Owner",
+                        "company": 1
+                    }
+                ],
+                "departments": []
+            }
+        ]
         
         with self.assertNumQueries(3):
-            response = client.get('http://127.0.0.1:8000'+reverse('user-get_users_by_company',kwargs={"company_pk":1}), HTTP_HOST='127.0.0.1')
+            response = client.get('http://127.0.0.1:8000'+reverse('user-get_users_by_company', kwargs={"company_pk":1}), HTTP_HOST='127.0.0.1')
             self.assertEqual(users_expected, response.data)
 
 
