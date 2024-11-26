@@ -1,7 +1,8 @@
 import shutil
 import tempfile
 from io import BytesIO
-from unittest.mock import patch
+from unittest.mock import patch,MagicMock
+import requests
 
 from PIL import Image
 
@@ -13,6 +14,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase, APIClient, APIRequestFactory
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from user_profile.serializers import ProfileUserForCompanySerializer
 from user_profile.models import User
 from .test_base import Settings, mock_upload_file
 from ..views import ProfileCompanyAPIView
@@ -53,6 +55,61 @@ class ProfileAPIViewSetTestCase(Settings):
         client = APIClient()
         response = client.get(self.profile_url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    @patch('user_profile.views.requests.get')
+    def test_get_users_info_by_company(self, mock_get):
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = [ 
+            {
+                "email": "us@example.com",
+                "positions": [
+                    {
+                        "id": 4,
+                        "title": "Водолаз",
+                        "description": "string",
+                        "access_weight": "Owner",
+                        "company": 1,
+                        "users": [
+                            {
+                                "id": 2,
+                                "email": "us@example.com"
+                            }
+                        ]
+                    }
+                ],
+                "departments": []
+            }
+        ]
+        mock_get.return_value = mock_response
+        client = self.user_login()
+        users_expected = [  
+            {
+                "id": 2,
+                "email": "us@example.com",
+                "first_name": "zhumshut",
+                "last_name": "",
+                "phone": 'null',
+                "image_identifier": "c3f1b16c-8102-45b7-b8b5-666f268982fc",
+                "date_joined": "2024-11-25T04:57:29Z",
+                "links": [],
+                "positions": [
+                    {
+                        "id": 4,
+                        "title": "Водолаз",
+                        "description": "string",
+                        "access_weight": "Owner",
+                        "company": 1
+                    }
+                ],
+                "departments": []
+            }
+        ]
+        
+        with self.assertNumQueries(3):
+            response = client.get('http://127.0.0.1:8000'+reverse('user-get_users_by_company', kwargs={"company_pk":1}), HTTP_HOST='127.0.0.1')
+            self.assertEqual(users_expected, response.data)
+
 
 
 @patch('user_profile.serializers.upload_file', side_effect=mock_upload_file)

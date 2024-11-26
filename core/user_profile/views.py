@@ -11,7 +11,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet, ReadOnlyModelViewSet
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.decorators import action
 
+import requests
 from core.swagger_info import response_for_upload_image, request_for_upload_image
 from user_profile.models import User
 from user_profile.serializers import ProfileUserSerializer, ImageSerializer, ProfileUserForCompanySerializer
@@ -20,7 +22,7 @@ from user_profile.serializers import ProfileUserSerializer, ImageSerializer, Pro
 class ProfileAPIVewSet(GenericViewSet, RetrieveModelMixin, UpdateModelMixin):
     serializer_class = ProfileUserSerializer
     queryset = User.objects.all().select_related('customization','reminder','notification').prefetch_related('links')
-    permission_classes = (IsAuthenticated,)
+    # permission_classes = (IsAuthenticated,)
 
     def get_object(self):
         user = self.kwargs.get('pk')
@@ -37,6 +39,25 @@ class ProfileAPIVewSet(GenericViewSet, RetrieveModelMixin, UpdateModelMixin):
         cache_key = settings.USER_PROFILE_CACHE_KEY.format(user=user)
         cache.delete(cache_key)
         return response
+    
+    @action(methods=['get'], detail=False, url_path='users-info-by-company/(?P<company_pk>\d+)', url_name='get_users_by_company')
+    def get_users_by_company(self, request, company_pk):
+        url = settings.COMPANY_SERVICE_URL.format(f'api/v1/company/companies/{company_pk}/users-emails/')
+        response = requests.get(url=url)
+        if response.status_code != 200:
+            return Response({'detail':"company info wasn't get"}, status=response.status_code)
+        response_data = response.json()
+
+        users_pos_deps = [(user.get('positions', None), user.get('departments', None)) for user in response_data]
+        emails = [user.get('email', None) for user in response_data]
+
+        users = User.objects.filter(email__in=emails).prefetch_related('links')
+        context = {'emails': emails, 'pos_deps': users_pos_deps}
+        users_info = ProfileUserForCompanySerializer(users, many=True, context=context)
+
+        return Response(users_info.data, status=status.HTTP_200_OK)
+
+
 
 
 class ImageAPIView(APIView):
