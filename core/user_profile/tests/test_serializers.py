@@ -3,7 +3,7 @@ from unittest.mock import patch
 from rest_framework.exceptions import MethodNotAllowed
 
 from user_profile.models import Link
-from user_profile.serializers import LinkSerializer, CustomizationSerializer, ProfileUserSerializer, ImageSerializer, NotificationSerializer, ReminderSerializer
+from user_profile.serializers import LinkSerializer, CustomizationSerializer, ProfileUserSerializer, ImageSerializer, NotificationSerializer, ReminderSerializer, DepartmentForUsersInfoSerializer, PositionForUsersInfoSerializer
 from .test_base import Settings, mock_upload_file
 
 
@@ -175,3 +175,22 @@ class RemindersSerializerTestCase(Settings):
         updated_link = serializer.save()
         self.assertEqual(updated_link.id, self.reminder.id)
         self.assertNotEqual(updated_link.id, 999)
+
+
+class DepartmentForUserSerTestCase(Settings):
+
+    def test_dep_serializer_contains_expected_fields(self):
+        serializer = DepartmentForUsersInfoSerializer()
+        data = serializer.data
+        self.assertEqual(tuple(data.keys()), ('id', 'title','description','parent','color'))
+
+
+class PositionsForUserSerTestCase(Settings):
+
+    def test_dep_serializer_contains_expected_fields(self):
+        serializer = PositionForUsersInfoSerializer()
+        data = serializer.data
+        self.assertEqual(tuple(data.keys()), ('id', 'title','description','access_weight','company'))
+
+
+
