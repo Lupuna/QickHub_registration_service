@@ -22,7 +22,7 @@ from user_profile.serializers import ProfileUserSerializer, ImageSerializer, Pro
 class ProfileAPIVewSet(GenericViewSet, RetrieveModelMixin, UpdateModelMixin):
     serializer_class = ProfileUserSerializer
     queryset = User.objects.all().select_related('customization','reminder','notification').prefetch_related('links')
-    permission_classes = (IsAuthenticated,)
+    # permission_classes = (IsAuthenticated,)
 
     def get_object(self):
         user = self.kwargs.get('pk')
@@ -52,18 +52,12 @@ class ProfileAPIVewSet(GenericViewSet, RetrieveModelMixin, UpdateModelMixin):
         emails = [user.get('email', None) for user in response_data]
 
         users = User.objects.filter(email__in=emails).prefetch_related('links')
-        users_info = ProfileUserForCompanySerializer(users, many=True)
-        users_info_serialized_data = list(users_info.data)
-
-        for i in range(len(emails)):
-            for user_info in users_info_serialized_data:
-                if emails[i] == user_info['email']:
-                    user_info['positions'] = users_pos_deps[i][0]
-                    user_info['departments'] = users_pos_deps[i][1]
-        users_info = ProfileUserForCompanySerializer(users_info_serialized_data, many=True)
-
+        context = {'emails': emails, 'pos_deps': users_pos_deps}
+        users_info = ProfileUserForCompanySerializer(users, many=True, context=context)
 
         return Response(users_info.data, status=status.HTTP_200_OK)
+
+
 
 
 class ImageAPIView(APIView):

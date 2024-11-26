@@ -120,6 +120,16 @@ class ProfileUserForCompanySerializer(serializers.ModelSerializer):
             'phone', 'image_identifier', 'date_joined', 'links', 'positions', 'departments',
         )
 
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        emails = self.context.get('emails', [])
+        pos_deps = self.context.get('pos_deps', [])
+        idx = emails.index(instance.email)
+        representation['positions'] = pos_deps[idx][0]
+        representation['departments'] = pos_deps[idx][1]
+
+        return representation
+
 
 class ImageSerializer(serializers.Serializer):
     image = serializers.ImageField(required=True, write_only=True)
