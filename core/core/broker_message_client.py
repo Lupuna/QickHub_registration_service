@@ -1,12 +1,13 @@
 from contextlib import contextmanager
-from pika import ConnectionParameters, BlockingConnection
+from pika import ConnectionParameters, BlockingConnection, BasicProperties
 from loguru import logger
+from core.utils import rabbitmq_message_exceptions
 from requests import request
-from requests.exceptions import Timeout
-from json import JSONDecodeError, loads
+from json import loads
+from abc import abstractmethod
 
 
-class RabbitMQClient:
+class BaseRabbitMQClient:
 
     def __init__(self, host, exchange, queue):
         self.connection_params = ConnectionParameters(host=host)
@@ -33,13 +34,28 @@ class RabbitMQClient:
             except Exception as e:
                 logger.warning(f"Failed to close connection: {e}")
 
-    def publish_message(self, message):
+    def publish_message(self, message, data_to_response: dict | None = None, ):
+        properties = self._properties_generate(data_to_response)
+
         with self.connect_and_channel() as ch:
             ch.basic_publish(
                 exchange=self.exchange,
                 routing_key=self.queue,
-                body=message
+                body=message,
+                properties=properties
             )
+
+    def _properties_generate(self, data_to_response):
+        if data_to_response:
+            reply_to = data_to_response.pop('reply_to', None)
+            headers = {**data_to_response, 'method_type': data_to_response.get('method_type', 'POST')}
+            if reply_to:
+                if 'exchange' not in headers or 'queue' not in headers:
+                    raise ValueError("Missing 'exchange' or 'queue' in response data")
+            properties = BasicProperties(reply_to=reply_to, headers=headers)
+        else:
+            properties = None
+        return properties
 
     def consume_message(self, callback):
         with self.connect_and_channel() as ch:
@@ -49,18 +65,33 @@ class RabbitMQClient:
             )
             ch.start_consuming()
 
+    @abstractmethod
+    def message_handler(self, body, channel, method, properties):
+        ...
+
+
+class RabbitMQClient(BaseRabbitMQClient):
+
     @staticmethod
-    def base_callback(channel, method, properties, body):
-        try:
-            endpoint, method_type, payload = RabbitMQClient.parse_message(body)
-            request(method_type, endpoint, json=payload, timeout=1)
-            channel.basic_ack(delivery_tag=method.delivery_tag)
-        except Timeout as e:
-            logger.error(f"TimeoutError in base_callback: {e}")
-            channel.basic_nack(delivery_tag=method.delivery_tag, requeue=True)
-        except (JSONDecodeError, ValueError) as e:
-            logger.error(f"Error in base_callback: {e}")
-            channel.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
+    @rabbitmq_message_exceptions
+    def message_handler(body, channel, method, properties):
+        endpoint, payload = RabbitMQClient.parse_message(body)
+        response = request(properties.headers['method_type'], endpoint, json=payload, timeout=1)
+        channel.basic_ack(delivery_tag=method.delivery_tag)
+
+        exchange = properties.headers.get('exchange')
+        queue = properties.headers.get('queue')
+        if properties.reply_to and exchange and queue:
+            response_message = {
+                'status_code': response.status_code,
+                'data': response.json() if response.content else None
+            }
+
+            channel.basic_publish(
+                exchange=properties.headers.get('exchange'),
+                routing_key=properties.headers.get('queue'),
+                body=response_message
+            )
 
     @staticmethod
     def parse_message(body):
@@ -69,8 +100,28 @@ class RabbitMQClient:
         logger.info(f"Received message: {message}, \n data: {data}")
         endpoint = data.get("endpoint")
         payload = data.get("payload")
-        method_type = data.get("method", "POST").upper()
         if not endpoint:
             raise ValueError("Missing 'endpoint' in message")
-        return endpoint, method_type, payload
+        return endpoint, payload
 
+
+# TODO: дописать сюда создание временной очереди (self.channel.queue_declare(queue=self.queue, exclusive=True) как вариант)
+class RabbitMQResponseClient(BaseRabbitMQClient):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.response = None
+
+    @rabbitmq_message_exceptions
+    def message_handler(self, body, channel, method, properties):
+        response = RabbitMQClient.parse_message(body)
+        channel.basic_ack(delivery_tag=method.delivery_tag)
+        self.response = response
+
+    @staticmethod
+    def parse_message(body):
+        message = body.decode('utf-8')
+        data = loads(message)
+        logger.info(f"Received message: {message}, \n data: {data}")
+        response = data.get("response")
+        return response

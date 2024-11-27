@@ -64,22 +64,6 @@ services:
     <<: *worker-template
     hostname: worker4
 
-  flower:
-    build:
-      context: .
-      dockerfile: dockerfiles/web_app/Dockerfile
-    hostname: flower
-    entrypoint: celery
-    command: -A celery_app.app flower
-    volumes:
-      - ./core:/core
-    links:
-      - redis
-    depends_on:
-      - redis
-    ports:
-      - "5555:5555"
-
   nginx:
     image: nginx:alpine3.20
     volumes:
