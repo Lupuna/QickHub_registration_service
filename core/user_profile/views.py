@@ -21,8 +21,8 @@ from user_profile.serializers import ProfileUserSerializer, ImageSerializer, Pro
 
 class ProfileAPIVewSet(GenericViewSet, RetrieveModelMixin, UpdateModelMixin):
     serializer_class = ProfileUserSerializer
-    queryset = User.objects.all().select_related('customization','reminder','notification').prefetch_related('links')
-    # permission_classes = (IsAuthenticated,)
+    queryset = User.objects.all().select_related('customization', 'reminder', 'notification').prefetch_related('links')
+    permission_classes = (IsAuthenticated,)
 
     def get_object(self):
         user = self.kwargs.get('pk')
@@ -39,13 +39,14 @@ class ProfileAPIVewSet(GenericViewSet, RetrieveModelMixin, UpdateModelMixin):
         cache_key = settings.USER_PROFILE_CACHE_KEY.format(user=user)
         cache.delete(cache_key)
         return response
-    
-    @action(methods=['get'], detail=False, url_path='users-info-by-company/(?P<company_pk>\d+)', url_name='get_users_by_company')
+
+    @action(methods=['get'], detail=False, url_path='users-info-by-company/(?P<company_pk>\d+)',
+            url_name='get_users_by_company')
     def get_users_by_company(self, request, company_pk):
         url = settings.COMPANY_SERVICE_URL.format(f'api/v1/company/companies/{company_pk}/users-emails/')
         response = requests.get(url=url)
         if response.status_code != 200:
-            return Response({'detail':"company info wasn't get"}, status=response.status_code)
+            return Response({'detail': "company info wasn't get"}, status=response.status_code)
         response_data = response.json()
 
         users_pos_deps = [(user.get('positions', None), user.get('departments', None)) for user in response_data]
@@ -56,8 +57,6 @@ class ProfileAPIVewSet(GenericViewSet, RetrieveModelMixin, UpdateModelMixin):
         users_info = ProfileUserForCompanySerializer(users, many=True, context=context)
 
         return Response(users_info.data, status=status.HTTP_200_OK)
-
-
 
 
 class ImageAPIView(APIView):
@@ -92,7 +91,7 @@ class ImageAPIView(APIView):
 
 @extend_schema(
     tags=["User for company"]
-    )
+)
 class ProfileCompanyAPIView(ListAPIView):
     serializer_class = ProfileUserForCompanySerializer
     permission_classes = (IsAuthenticated,)

@@ -13,6 +13,7 @@ class LinkSerializer(serializers.ModelSerializer):
         fields = ('id', 'title', 'link')
         read_only_fields = ('id',)
 
+
 class PositionForUsersInfoSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     title = serializers.CharField()
@@ -27,6 +28,7 @@ class DepartmentForUsersInfoSerializer(serializers.Serializer):
     description = serializers.CharField()
     parent = serializers.CharField()
     color = serializers.CharField()
+
 
 class CustomizationSerializer(serializers.ModelSerializer):
     class Meta:

@@ -8,6 +8,6 @@ router.register(r'profile', ProfileAPIVewSet)
 
 urlpatterns = [
     path('v1/', include(router.urls)),
-    path('load-image/', ImageAPIView.as_view(), name='load_image'),
+    path('v1/load-image/', ImageAPIView.as_view(), name='load_image'),
     path('v1/company-for-profiles/', ProfileCompanyAPIView.as_view(), name='company_profile')
 ]

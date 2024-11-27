@@ -200,7 +200,7 @@ INTERNAL_IPS = [
     "127.0.0.1",
 ]
 
-RABBITMQ_HOST = "localhost" if os.environ.get('IS_DEBUG') is True else "92.63.67.98"
+RABBITMQ_HOST = "rabbitmq"
 RABBITMQ_QUEUE = "registration"
 RABBITMQ_EXCHANGE = ""
 
