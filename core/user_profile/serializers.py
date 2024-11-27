@@ -40,14 +40,14 @@ class CustomizationSerializer(serializers.ModelSerializer):
 class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notifications
-        fields = ('id', *(i for i in [j for j in Notifications().__dict__.keys()][3::]))
+        fields = ('id', 'user', 'chat_message_ring', 'chat_message_in_browser', 'is_executor_ring', 'is_executor_in_browser', 'dl_expired_ring', 'dl_expired_in_browser', 'task_done_ring', 'task_done_in_browser')
         read_only_fields = ('id',)
 
 
 class ReminderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Reminders
-        fields = ('id', *(i for i in [j for j in Reminders().__dict__.keys()][3::]))
+        fields = ('id', 'user', 'days_before_start_task', 'exact_time_of_day_before_start_task', 'time_before_deadline', 'remind_about_expire_in')
         read_only_fields = ('id',)
 
 
@@ -118,7 +118,7 @@ class ProfileUserForCompanySerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
-            'id', 'email', 'first_name', 'last_name',
+            'email', 'first_name', 'last_name',
             'phone', 'image_identifier', 'date_joined', 'links', 'positions', 'departments',
         )
 
