@@ -70,12 +70,6 @@ class ProfileAPIViewSetTestCase(Settings):
                         "description": "string",
                         "access_weight": "Owner",
                         "company": 1,
-                        "users": [
-                            {
-                                "id": 2,
-                                "email": "us@example.com"
-                            }
-                        ]
                     }
                 ],
                 "departments": []
@@ -85,7 +79,7 @@ class ProfileAPIViewSetTestCase(Settings):
         client = self.user_login()
         users_expected = [
             {
-                "id": 2,
+
                 "email": "us@example.com",
                 "first_name": "zhumshut",
                 "last_name": "",
