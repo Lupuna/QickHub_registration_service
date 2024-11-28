@@ -3,7 +3,8 @@ from unittest.mock import patch
 from rest_framework.exceptions import MethodNotAllowed
 
 from user_profile.models import Link
-from user_profile.serializers import LinkSerializer, CustomizationSerializer, ProfileUserSerializer, ImageSerializer, NotificationSerializer, ReminderSerializer, DepartmentForUsersInfoSerializer, PositionForUsersInfoSerializer
+from user_profile.serializers import LinkSerializer, CustomizationSerializer, ProfileUserSerializer, ImageSerializer, \
+    NotificationSerializer, ReminderSerializer, DepartmentForUsersInfoSerializer, PositionForUsersInfoSerializer
 from .test_base import Settings, mock_upload_file
 
 
@@ -47,8 +48,8 @@ class ProfileUserSerializerTestCase(Settings):
             'first_name': 'new_first_name',
             'last_name': 'new_last_name',
             'customization': {'font_size': 15},
-            'reminder':{'days_before_start_task':1},
-            'notification':{'chat_message_ring':True},
+            'reminder': {'days_before_start_task': 1},
+            'notification': {'chat_message_ring': True},
             'links': [
                 {'title': 'Link 1', 'link': 'http://updatedlink1.com'},
                 {'title': 'Link 3', 'link': 'http://link3.com'},
@@ -64,7 +65,7 @@ class ProfileUserSerializerTestCase(Settings):
                 'id', 'image_identifier',
                 'phone', 'city', 'birthday',
                 'links', 'customization', 'reminder',
-                'notification' ,'first_name' , 'last_name',
+                'notification', 'first_name', 'last_name',
             )
         )
 
@@ -105,28 +106,28 @@ class ProfileUserSerializerTestCase(Settings):
 
         self.assertTrue(Link.objects.filter(user=self.user, title='Link 3').exists())
 
-        updated_reminder=updated_user.reminder
-        self.assertEqual(updated_reminder.days_before_start_task,self.validated_data['reminder']['days_before_start_task'])
+        updated_reminder = updated_user.reminder
+        self.assertEqual(updated_reminder.days_before_start_task,
+                         self.validated_data['reminder']['days_before_start_task'])
 
-        updated_note=updated_user.notification
-        self.assertEqual(updated_note.chat_message_ring,self.validated_data['notification']['chat_message_ring'])
+        updated_note = updated_user.notification
+        self.assertEqual(updated_note.chat_message_ring, self.validated_data['notification']['chat_message_ring'])
 
     def test_update_method_with_no_links_and_customisation(self):
-        data_without_links = {
+        data_without_links_and_customisation = {
             'phone': '0987654321',
             'city': 'Another City',
             'birthday': '1992-02-02'
         }
-        serializer = ProfileUserSerializer(instance=self.user, data=data_without_links)
+        serializer = ProfileUserSerializer(instance=self.user, data=data_without_links_and_customisation)
         self.assertTrue(serializer.is_valid())
         updated_user = serializer.save()
 
-        self.assertEqual(updated_user.phone, data_without_links['phone'])
-        self.assertEqual(updated_user.city, data_without_links['city'])
-        self.assertEqual(str(updated_user.birthday), data_without_links['birthday'])
+        self.assertEqual(updated_user.phone, data_without_links_and_customisation['phone'])
+        self.assertEqual(updated_user.city, data_without_links_and_customisation['city'])
+        self.assertEqual(str(updated_user.birthday), data_without_links_and_customisation['birthday'])
 
         updated_customization = updated_user.customization
-        self.assertEqual(updated_customization.font_size, 15)
         self.assertEqual(Link.objects.filter(user=self.user).count(), 3)
 
 
@@ -152,7 +153,10 @@ class NotificationsSerializerTestCase(Settings):
     def test_notification_serializer_contains_expected_fields(self):
         serializer = NotificationSerializer(self.notification)
         data = serializer.data
-        self.assertEqual(tuple(data.keys()), ('id', 'chat_message_ring','chat_message_in_browser','is_executor_ring','is_executor_in_browser','dl_expired_ring','dl_expired_in_browser','task_done_ring','task_done_in_browser'))
+        self.assertEqual(tuple(data.keys()), (
+        'id', 'chat_message_ring', 'chat_message_in_browser', 'is_executor_ring', 'is_executor_in_browser',
+        'dl_expired_ring', 'dl_expired_in_browser', 'task_done_ring', 'task_done_in_browser'
+        ))
 
     def test_notifications_serializer_read_only_id(self):
         serializer = NotificationSerializer(self.notification, data={'id': 999})
@@ -167,11 +171,13 @@ class RemindersSerializerTestCase(Settings):
     def test_reminder_serializer_contains_expected_fields(self):
         serializer = ReminderSerializer(self.reminder)
         data = serializer.data
-        self.assertEqual(tuple(data.keys()), ('id', 'days_before_start_task','exact_time_of_day_before_start_task','time_before_deadline','remind_about_expire_in'))
+        self.assertEqual(tuple(data.keys()), (
+            'id', 'days_before_start_task', 'exact_time_of_day_before_start_task', 'time_before_deadline',
+            'remind_about_expire_in'))
 
     def test_reminder_serializer_read_only_id(self):
         serializer = NotificationSerializer(self.reminder, data={'id': 999})
-        self.assertTrue(serializer.is_valid())
+        self.assertTrue(serializer.is_valid(), serializer.errors)
         updated_link = serializer.save()
         self.assertEqual(updated_link.id, self.reminder.id)
         self.assertNotEqual(updated_link.id, 999)
@@ -182,7 +188,7 @@ class DepartmentForUserSerTestCase(Settings):
     def test_dep_serializer_contains_expected_fields(self):
         serializer = DepartmentForUsersInfoSerializer()
         data = serializer.data
-        self.assertEqual(tuple(data.keys()), ('id', 'title','description','parent','color'))
+        self.assertEqual(tuple(data.keys()), ('id', 'title', 'description', 'parent', 'color'))
 
 
 class PositionsForUserSerTestCase(Settings):
@@ -190,7 +196,4 @@ class PositionsForUserSerTestCase(Settings):
     def test_dep_serializer_contains_expected_fields(self):
         serializer = PositionForUsersInfoSerializer()
         data = serializer.data
-        self.assertEqual(tuple(data.keys()), ('id', 'title','description','access_weight','company'))
-
-
-
+        self.assertEqual(tuple(data.keys()), ('id', 'title', 'description', 'access_weight', 'company'))

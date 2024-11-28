@@ -25,16 +25,9 @@ class BaseRabbitMQClient:
         except Exception as e:
             logger.error(f"Error with RabbitMQ {e}")
         finally:
-            try:
-                if self.channel: self.channel.close()
-            except Exception as e:
-                logger.warning(f"Failed to close channel: {e}")
-            try:
-                if self.connection: self.connection.close()
-            except Exception as e:
-                logger.warning(f"Failed to close connection: {e}")
+            self._close_resources()
 
-    def publish_message(self, message, data_to_response: dict | None = None, ):
+    def publish_message(self, message, data_to_response: dict | None = None):
         properties = self._properties_generate(data_to_response)
 
         with self.connect_and_channel() as ch:
@@ -45,7 +38,7 @@ class BaseRabbitMQClient:
                 properties=properties
             )
 
-    def _properties_generate(self, data_to_response):
+    def _properties_generate(self, data_to_response: dict | None = None):
         if data_to_response:
             reply_to = data_to_response.pop('reply_to', None)
             headers = {**data_to_response, 'method_type': data_to_response.get('method_type', 'POST')}
@@ -56,6 +49,20 @@ class BaseRabbitMQClient:
         else:
             properties = None
         return properties
+
+    def _close_resources(self):
+        if self.channel:
+            try:
+                self.channel.close()
+                logger.info("Channel closed successfully.")
+            except Exception as e:
+                logger.warning(f"Failed to close channel: {e}")
+        if self.connection:
+            try:
+                self.connection.close()
+                logger.info("Connection closed successfully.")
+            except Exception as e:
+                logger.warning(f"Failed to close connection: {e}")
 
     def consume_message(self, callback):
         with self.connect_and_channel() as ch:
@@ -97,7 +104,6 @@ class RabbitMQClient(BaseRabbitMQClient):
     def parse_message(body):
         message = body.decode('utf-8')
         data = loads(message)
-        logger.info(f"Received message: {message}, \n data: {data}")
         endpoint = data.get("endpoint")
         payload = data.get("payload")
         if not endpoint:
@@ -105,12 +111,24 @@ class RabbitMQClient(BaseRabbitMQClient):
         return endpoint, payload
 
 
-# TODO: дописать сюда создание временной очереди (self.channel.queue_declare(queue=self.queue, exclusive=True) как вариант)
 class RabbitMQResponseClient(BaseRabbitMQClient):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.response = None
+
+    @contextmanager
+    def connect_and_channel(self):
+        try:
+            self.connection = BlockingConnection(self.connection_params)
+            self.channel = self.connection.channel()
+            result = self.channel.queue_declare(queue=self.queue, exclusive=True, auto_delete=True)
+            self.queue = result.method.queue
+            yield self.channel
+        except Exception as e:
+            logger.error(f"Error with RabbitMQ {e}")
+        finally:
+            self._close_resources()
 
     @rabbitmq_message_exceptions
     def message_handler(self, body, channel, method, properties):

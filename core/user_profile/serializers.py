@@ -40,14 +40,14 @@ class CustomizationSerializer(serializers.ModelSerializer):
 class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notifications
-        fields = ('id', 'user', 'chat_message_ring', 'chat_message_in_browser', 'is_executor_ring', 'is_executor_in_browser', 'dl_expired_ring', 'dl_expired_in_browser', 'task_done_ring', 'task_done_in_browser')
+        fields = ('id', 'chat_message_ring', 'chat_message_in_browser', 'is_executor_ring', 'is_executor_in_browser', 'dl_expired_ring', 'dl_expired_in_browser', 'task_done_ring', 'task_done_in_browser')
         read_only_fields = ('id',)
 
 
 class ReminderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Reminders
-        fields = ('id', 'user', 'days_before_start_task', 'exact_time_of_day_before_start_task', 'time_before_deadline', 'remind_about_expire_in')
+        fields = ('id', 'days_before_start_task', 'exact_time_of_day_before_start_task', 'time_before_deadline', 'remind_about_expire_in')
         read_only_fields = ('id',)
 
 
