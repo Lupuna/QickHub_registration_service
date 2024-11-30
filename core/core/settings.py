@@ -158,13 +158,13 @@ SIMPLE_JWT = {
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": "redis://redis:6379",
+        "LOCATION": "redis://localhost:6379",
         "OPTIONS": {
             "db": "1",
         },
     }
 }
-CELERY_BROKER_URL = 'redis://redis:6379/0'
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
 
 LOGGING = {
     'version': 1,
@@ -200,9 +200,9 @@ INTERNAL_IPS = [
     "127.0.0.1",
 ]
 
-RABBITMQ_HOST = "rabbitmq"
-RABBITMQ_QUEUE = "registration"
-RABBITMQ_EXCHANGE = ""
+RABBITMQ_HOST = 'localhost'
+RABBITMQ_QUEUE = 'registration'
+RABBITMQ_EXCHANGE = ''
 
 hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
 INTERNAL_IPS += [".".join(ip.split(".")[:-1] + ["1"]) for ip in ips]

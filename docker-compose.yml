@@ -11,13 +11,14 @@ x-worker-template: &worker-template
   depends_on:
     - redis
     - database
-    - rabbitmq
   environment:
-    - DB_HOST=database
+    - DB_HOST=localhost
+    - DB_PORT=5432
     - DB_NAME=dbname
     - DB_USER=dbuser
     - DB_PASS=password
-    - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
+    - REDIS_URL=redis://localhost:6379/0
+  network_mode: "host"
 
 services:
   web-app:
@@ -29,17 +30,19 @@ services:
     volumes:
       - ./core:/core
     environment:
-      - DB_HOST=database
+      - DB_HOST=localhost
+      - DB_PORT=5432
       - DB_NAME=dbname
       - DB_USER=dbuser
       - DB_PASS=password
       - IS_DEBUG=True
-      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
+      - REDIS_URL=redis://localhost:6379/0
     command: >
       sh -c "python manage.py runserver 0.0.0.0:8000"
     depends_on:
+      - redis
       - database
-      - rabbitmq
+    network_mode: "host"
 
   database:
     image: postgres:14.6-alpine
@@ -49,53 +52,20 @@ services:
       - POSTGRES_PASSWORD=password
     volumes:
       - db_data:/var/lib/postgresql/data
+    network_mode: "host"
 
   redis:
     image: redis:7.0.5-alpine
-    hostname: redis
-
-  rabbitmq:
-    image: "rabbitmq:3-management-alpine"
-    hostname: rabbitmq
-    ports:
-      - "15672:15672"
-      - "5672:5672"
-    environment:
-      - RABBITMQ_DEFAULT_USER=guest
-      - RABBITMQ_DEFAULT_PASS=guest
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
+    network_mode: "host"
 
   worker1:
     <<: *worker-template
-    hostname: worker1
   worker2:
     <<: *worker-template
-    hostname: worker2
   worker3:
     <<: *worker-template
-    hostname: worker3
   worker4:
     <<: *worker-template
-    hostname: worker4
-
-  flower:
-    build:
-      context: .
-      dockerfile: dockerfiles/web_app/Dockerfile
-    hostname: flower
-    entrypoint: celery
-    command: -A celery_app.app flower
-    volumes:
-      - ./core:/core
-    links:
-      - redis
-    depends_on:
-      - redis
-      - rabbitmq
-    ports:
-      - "5555:5555"
 
 volumes:
   db_data:
-  rabbitmq_data:
