@@ -91,7 +91,7 @@ class TestLink(Settings):
 class TestReminders(Settings):
 
     def test_str(self):
-        self.assertEqual(str(self.reminder),'  |  '.join([f'{attr}: {str(val)}' for attr,val in [(at,va) for at,va in self.reminder.__dict__.items()][2::]]))
+        self.assertEqual(str(self.reminder),'days_before_start_task: 1  |  exact_time_of_day_before_start_task: 8  |  time_before_deadline: 30  |  remind_about_expire_in: В начале следующей недели')
     def test_verbose_names(self):
         self.assertEqual(self.reminder._meta.verbose_name,_('Reminder'))
         self.assertEqual(self.reminder._meta.verbose_name_plural,_("Reminders"))
@@ -110,7 +110,7 @@ class TestReminders(Settings):
 class NotificationTestCase(Settings):
 
     def test_str(self):
-        self.assertEqual(str(self.notification),'  |  '.join([f'{attr}: {str(val)}' for attr,val in [(at,va) for at,va in self.notification.__dict__.items()][2::]]))
+        self.assertEqual(str(self.notification),'chat_message: ring=True \ browser=True  |  is_executor: ring=True \ browser=True  |  dl_expired: ring=True \ browser=True  |  task_done: ring=True \ browser=True')
     
     def test_verbose_names(self):
         self.assertEqual(self.notification._meta.verbose_name,_('Notification'))

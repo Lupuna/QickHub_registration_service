@@ -1,7 +1,7 @@
 import shutil
 import tempfile
 from io import BytesIO
-from unittest.mock import patch,MagicMock
+from unittest.mock import patch, MagicMock
 import requests
 
 from PIL import Image
@@ -27,7 +27,8 @@ class ProfileAPIViewSetTestCase(Settings):
 
     def user_login(self):
         client = APIClient()
-        client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.refresh.access_token}')
+        client.credentials(HTTP_AUTHORIZATION=f'Bearer {
+                           self.refresh.access_token}')
         return client
 
     def test_retrieve_with_cache(self):
@@ -60,7 +61,7 @@ class ProfileAPIViewSetTestCase(Settings):
     def test_get_users_info_by_company(self, mock_get):
         mock_response = MagicMock()
         mock_response.status_code = 200
-        mock_response.json.return_value = [ 
+        mock_response.json.return_value = [
             {
                 "email": "us@example.com",
                 "positions": [
@@ -70,12 +71,6 @@ class ProfileAPIViewSetTestCase(Settings):
                         "description": "string",
                         "access_weight": "Owner",
                         "company": 1,
-                        "users": [
-                            {
-                                "id": 2,
-                                "email": "us@example.com"
-                            }
-                        ]
                     }
                 ],
                 "departments": []
@@ -83,13 +78,16 @@ class ProfileAPIViewSetTestCase(Settings):
         ]
         mock_get.return_value = mock_response
         client = self.user_login()
-        users_expected = [  
+        users_expected = [
             {
                 "id": 2,
                 "email": "us@example.com",
                 "first_name": "zhumshut",
                 "last_name": "",
+                'otchestwo': '',
                 "phone": 'null',
+                'business_phone': None,
+                'city': None,
                 "image_identifier": "c3f1b16c-8102-45b7-b8b5-666f268982fc",
                 "date_joined": "2024-11-25T04:57:29Z",
                 "links": [],
@@ -105,11 +103,11 @@ class ProfileAPIViewSetTestCase(Settings):
                 "departments": []
             }
         ]
-        
-        with self.assertNumQueries(3):
-            response = client.get('http://127.0.0.1:8000'+reverse('user-get_users_by_company', kwargs={"company_pk":1}), HTTP_HOST='127.0.0.1')
-            self.assertEqual(users_expected, response.data)
 
+        with self.assertNumQueries(3):
+            response = client.get('http://127.0.0.1:8000'+reverse(
+                'user-get_users_by_company', kwargs={"company_pk": 1}), HTTP_HOST='127.0.0.1')
+            self.assertEqual(users_expected, response.data)
 
 
 @patch('user_profile.serializers.upload_file', side_effect=mock_upload_file)
@@ -126,7 +124,8 @@ class UpdateImportantDataAPIViewTestCase(APITestCase):
         shutil.rmtree(settings.MEDIA_ROOT, ignore_errors=True)
 
     def setUp(self):
-        self.user = User.objects.create_user(email='good_username@gmail.com', password='password_123', first_name='first', last_name='last')
+        self.user = User.objects.create_user(
+            email='good_username@gmail.com', password='password_123', first_name='first', last_name='last')
         self.url = reverse('load_image')
         self.refresh = RefreshToken.for_user(self.user)
         self.data = {
@@ -137,7 +136,8 @@ class UpdateImportantDataAPIViewTestCase(APITestCase):
     def user_login(self):
         client = APIClient()
         client.force_login(self.user)
-        client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.refresh.access_token}')
+        client.credentials(HTTP_AUTHORIZATION=f'Bearer {
+                           self.refresh.access_token}')
         return client
 
     def test_successful_post_request(self, mock_upload_file):
@@ -148,7 +148,8 @@ class UpdateImportantDataAPIViewTestCase(APITestCase):
 
     def test_missing_data_to_update(self, mock_upload_file):
         client = self.user_login()
-        response = client.post(self.url, self.data_without_image, format='multipart')
+        response = client.post(
+            self.url, self.data_without_image, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data['error'], 'image is required')
 
@@ -186,4 +187,3 @@ class UserCompanyAPIViewSetTestCase(Settings):
             'phone', 'image_identifier', 'date_joined', 'links'
         )
         self.assertQuerySetEqual(queryset, correct_meaning)
-
