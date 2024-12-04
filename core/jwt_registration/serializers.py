@@ -9,7 +9,8 @@ class UserImportantSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'email', 'password', 'password2', 'first_name', 'last_name')
+        fields = ('id', 'email', 'password',
+                  'password2', 'first_name', 'last_name')
 
     def validate(self, attrs):
         data = super().validate(attrs)
@@ -18,9 +19,11 @@ class UserImportantSerializer(serializers.ModelSerializer):
 
         if self.instance is None:
             if not attrs.get('first_name'):
-                raise serializers.ValidationError({'error': 'First name is required.'})
+                raise serializers.ValidationError(
+                    {'error': 'First name is required.'})
             if not attrs.get('last_name'):
-                raise serializers.ValidationError({'error': 'Last name is required.'})
+                raise serializers.ValidationError(
+                    {'error': 'Last name is required.'})
 
         if (password and password2) and password != password2:
             raise serializers.ValidationError('Password mismatch')
@@ -40,6 +43,14 @@ class UserImportantSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         instance.email = validated_data.get('email', instance.email)
-        if validated_data.get('password'): instance.set_password(validated_data['password'])
+        if validated_data.get('password'):
+            instance.set_password(validated_data['password'])
         instance.save()
         return instance
+
+
+class UserEmailSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ('email', )

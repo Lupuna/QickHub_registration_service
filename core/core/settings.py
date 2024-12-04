@@ -186,9 +186,12 @@ LOGGING = {
 
 logger.remove()
 logger.add(sys.stdout, level="DEBUG", backtrace=True)
-logger.add("logs/debug.log", level="DEBUG", rotation="30 MB", backtrace=True, retention="1 days")
-logger.add("logs/info.log", level="INFO", rotation="30 MB", backtrace=True, retention="3 days")
-logger.add("logs/error.log", level="ERROR", rotation="30 MB", backtrace=True, retention="7 days")
+logger.add("logs/debug.log", level="DEBUG", rotation="30 MB",
+           backtrace=True, retention="1 days")
+logger.add("logs/info.log", level="INFO", rotation="30 MB",
+           backtrace=True, retention="3 days")
+logger.add("logs/error.log", level="ERROR", rotation="30 MB",
+           backtrace=True, retention="7 days")
 
 SPECTACULAR_SETTINGS = {
     'TITLE': 'API Schema',
@@ -210,3 +213,11 @@ STORAGE_SECRET_KEY = os.getenv('SECRET_STORAGE_KEY')
 BUCKET_NAME = 'bucket-for-user-avatar'
 STORAGE_URL = f'https://s3.storage.selcloud.ru/'
 COMPANY_SERVICE_URL = 'http://92.63.67.98:8002/company-service/{}'
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.yandex.ru'
+EMAIL_PORT = 465
+EMAIL_USE_SSL = True
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER + '@yandex.ru'
