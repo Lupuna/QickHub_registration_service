@@ -9,7 +9,7 @@ from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 
 from core.swagger_info import *
-from jwt_registration.serializers import UserImportantSerializer, UserEmailSerializer
+from jwt_registration.serializers import UserImportantSerializer
 from jwt_registration.utils import put_token_on_blacklist, HeadTwoCommitsPattern
 from django.db import transaction
 from django.core.mail import send_mail
@@ -133,35 +133,37 @@ class UpdateImportantDataAPIView(APIView):
     tags=['EmailVerify']
 )
 class EmailVerifyView(APIView):
-    @extend_schema(request=UserEmailSerializer, responses='200')
+    @extend_schema(request=['email'], responses=[200])
     def post(self, request):
-        serializer = UserEmailSerializer(data=request.data)
-        user_email = serializer.initial_data.get('email', None)
-        user = User.objects.get(email=user_email)
+        with transaction.atomic():
+            user_email = request.data.get('email', None)
+            user = User.objects.get(email=user_email)
+            if user.email_verified:
+                return Response({'detail': 'Email is already verified.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        token = AccessToken.for_user(user)
-        token.set_exp(lifetime=timezone.timedelta(seconds=60))
+            token = AccessToken.for_user(user)
+            token.set_exp(lifetime=timezone.timedelta(seconds=60))
 
-        verification_url = 'http://localhost:8000' + reverse('is_email_verified',
-                                                             kwargs={'token': str(token)})
-        send_mail(
-            subject='Verify your email!',
-            message=f'To verify your email on QuickHub follow the link:\n{
-                verification_url}',
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=['pridanov_ali@mail.ru'],  # [user_email],
-            auth_user=settings.EMAIL_HOST_USER,
-            auth_password=settings.EMAIL_HOST_PASSWORD
-        )
+            verification_url = 'http://localhost:8000' + reverse('is_email_verified',
+                                                                 kwargs={'token': str(token)})
+            send_mail(
+                subject='Verify your email!',
+                message=f'To verify your email on QuickHub follow the link:\n{
+                    verification_url}',
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[user_email],
+                auth_user=settings.EMAIL_HOST_USER,
+                auth_password=settings.EMAIL_HOST_PASSWORD
+            )
 
-        return Response({'detail': 'We send mail on your email to verification'}, status=status.HTTP_200_OK)
+        return Response({'detail': 'We sent mail on your email to verification'}, status=status.HTTP_200_OK)
 
 
 @extend_schema(
     tags=['IsEmailVerified']
 )
 class IsEmailVerifiedView(APIView):
-    @extend_schema(request=['coded_user_id', 'token'], responses=[200])
+    @extend_schema(request=['token'], responses=[200])
     def get(self, request, token):
         decoded_token = AccessToken(token=token)
 
@@ -169,8 +171,8 @@ class IsEmailVerifiedView(APIView):
         user = User.objects.get(id=user_id)
 
         if 'exp' in decoded_token.payload and timezone.now() > timezone.make_aware(datetime.datetime.fromtimestamp(decoded_token['exp'])):
-            return Response({'error': 'token expired. Send new mail'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Token expired.'}, status=status.HTTP_400_BAD_REQUEST)
 
         user.email_verified = True
         user.save()
-        return Response({'detail': 'Email verified'}, status=status.HTTP_200_OK)
+        return Response({'detail': 'Email verified succesfully!'}, status=status.HTTP_200_OK)

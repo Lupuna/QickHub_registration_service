@@ -47,10 +47,3 @@ class UserImportantSerializer(serializers.ModelSerializer):
             instance.set_password(validated_data['password'])
         instance.save()
         return instance
-
-
-class UserEmailSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = User
-        fields = ('email', )
