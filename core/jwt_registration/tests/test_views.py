@@ -5,6 +5,9 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from unittest.mock import patch
 from user_profile.models import User
 from rest_framework_simplejwt.exceptions import TokenError
+from itsdangerous import BadSignature, SignatureExpired
+from freezegun import freeze_time
+from django.utils import timezone
 
 
 class RegistrationAPITestCase(APITestCase):
@@ -242,7 +245,7 @@ class EmailVerifyTestCase(APITestCase):
         self.url = 'http://localhost:8000/account/api/v1/email-verify/'
 
     @patch('jwt_registration.views.send_mail')
-    def test_email_verify(self, mock_send_mail):
+    def test_email_verify_successful(self, mock_send_mail):
         response = self.client.post(self.url, self.data_to_post)
 
         mock_send_mail.assert_called_once()
@@ -282,5 +285,30 @@ class EmailVerifyTestCase(APITestCase):
         url_with_invalid_token = '/'.join(
             verification_url.split('/')[:-2]) + '/fasdfasd/'
 
-        with self.assertRaises(TokenError):
-            response = self.client.get(url_with_invalid_token)
+        response = self.client.get(url_with_invalid_token)
+
+        self.assertEqual(response.status_code, 406)
+        self.assertEqual(response.data, {'error': 'Invalid token'})
+
+    @patch('jwt_registration.views.send_mail')
+    def test_token_expired(self, mock_send_mail):
+        response = self.client.post(self.url, self.data_to_post)
+
+        args, kwargs = mock_send_mail.call_args
+
+        verification_url = kwargs['message'].split()[-1]
+
+        with freeze_time(timezone.now() + timezone.timedelta(hours=2)):
+            response = self.client.get(verification_url)
+
+            self.assertEqual(response.status_code, 406)
+            self.assertEqual(response.data, {'error': 'Token expired'})
+
+    @patch('jwt_registration.views.send_mail')
+    def test_user_does_not_exists(self, mock_send_mail):
+        self.data_to_post.update({'email': 'asf@gmail.com'})
+        response = self.client.post(self.url, self.data_to_post)
+
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(
+            response.data, {'error': 'User with this email does not exist'})
