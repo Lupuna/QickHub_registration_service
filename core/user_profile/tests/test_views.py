@@ -63,6 +63,7 @@ class ProfileAPIViewSetTestCase(Settings):
         mock_response.status_code = 200
         mock_response.json.return_value = [
             {
+                'id': 2,
                 "email": "us@example.com",
                 "positions": [
                     {

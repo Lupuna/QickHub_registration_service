@@ -152,14 +152,14 @@ class EmailVerifyView(APIView):
         token = token_ser.dumps(
             {'user_id': user.id}, salt='email-verify')
 
-        verification_url = 'http://localhost:8000' + reverse('is_email_verified',
-                                                             kwargs={'token': token})
+        verification_url = 'http://92.63.67.98:8000' + reverse('is_email_verified',
+                                                               kwargs={'token': token})
         send_verification_email.delay(
             subject='Verify your email!',
             message=f'To verify your email on QuickHub follow the link:\n{
                 verification_url}',
             from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=['pridanov_ali@mail.ru'],  # [user_email],
+            recipient_list=[user_email],
             auth_user=settings.EMAIL_HOST_USER,
             auth_password=settings.EMAIL_HOST_PASSWORD
         )
