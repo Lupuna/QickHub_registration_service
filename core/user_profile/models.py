@@ -9,13 +9,25 @@ from django.utils.translation import gettext_lazy as _
 
 from user_profile.managers import UserManager
 
+import datetime
+
 
 class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(_('email filed'), unique=True, blank=False)
     phone = models.CharField(
         max_length=25,
         validators=[
-            RegexValidator(r'^((8|\+7)[\- ]?)?(\(?\d{3}\)?[\- ]?)?[\d\- ]{7,10}$')
+            RegexValidator(
+                r'^((8|\+7)[\- ]?)?(\(?\d{3}\)?[\- ]?)?[\d\- ]{7,10}$')
+        ],
+        blank=True,
+        null=True,
+    )
+    business_phone = models.CharField(
+        max_length=25,
+        validators=[
+            RegexValidator(
+                r'^((8|\+7)[\- ]?)?(\(?\d{3}\)?[\- ]?)?[\d\- ]{7,10}$')
         ],
         blank=True,
         null=True,
@@ -30,11 +42,13 @@ class User(AbstractBaseUser, PermissionsMixin):
     birthday = models.DateField(blank=True, null=True)
     first_name = models.CharField(_("first name"), max_length=150, blank=True)
     last_name = models.CharField(_("last name"), max_length=150, blank=True)
+    otchestwo = models.CharField(_('otchestwo'), max_length=150, blank=True)
 
     is_staff = models.BooleanField(
         _("staff status"),
         default=False,
-        help_text=_("Designates whether the user can log into this admin site."),
+        help_text=_(
+            "Designates whether the user can log into this admin site."),
     )
     is_active = models.BooleanField(
         _("active"),
@@ -116,16 +130,22 @@ class Link(models.Model):
 
 
 class Reminders(models.Model):
-    DAYS_BEFORE = [(i + 1, f'За {i + 1} день до') for i in range(3)]
-    EXACT_TIMES = [(i + 1, f'{i + 1}:00') for i in range(23)]
-    TIMES_BEFORE_DL = [(i + 1, f'За {i + 1} минут до') for i in range(59)]
-    REMIND_EXPIRE = [('В начале следующей недели', 'В начале следующей недели')]
+    DAYS_BEFORE = [(i+1, f'За {i+1} день до') for i in range(3)]
+    EXACT_TIMES = [(i+1, f'{i+1}:00') for i in range(23)]
+    TIMES_BEFORE_DL = [(i+1, f'За {i+1} минут до') for i in range(59)]
+    REMIND_EXPIRE = [('В начале следующей недели',
+                      'В начале следующей недели')]
 
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='reminder')
-    days_before_start_task = models.IntegerField(choices=DAYS_BEFORE, default=1)
-    exact_time_of_day_before_start_task = models.IntegerField(choices=EXACT_TIMES, default=8)
-    time_before_deadline = models.IntegerField(choices=TIMES_BEFORE_DL, default=30)
-    remind_about_expire_in = models.CharField(choices=REMIND_EXPIRE, default='В начале следующей недели')
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name='reminder')
+    days_before_start_task = models.IntegerField(
+        choices=DAYS_BEFORE, default=1)
+    exact_time_of_day_before_start_task = models.IntegerField(
+        choices=EXACT_TIMES, default=8)
+    time_before_deadline = models.IntegerField(
+        choices=TIMES_BEFORE_DL, default=30)
+    remind_about_expire_in = models.CharField(
+        choices=REMIND_EXPIRE, default='В начале следующей недели')
 
     class Meta:
         verbose_name = _('Reminder')
@@ -136,7 +156,8 @@ class Reminders(models.Model):
 
 
 class Notifications(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='notification')
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name='notification')
     chat_message_ring = models.BooleanField(default=True)
     chat_message_in_browser = models.BooleanField(default=True)
     is_executor_ring = models.BooleanField(default=True)
@@ -151,4 +172,4 @@ class Notifications(models.Model):
         verbose_name_plural = _('Notifications')
 
     def __str__(self) -> str:
-        return fr'chat_message: ring={self.chat_message_ring} \ browser={self.chat_message_in_browser}  |  is_executor: ring={self.is_executor_ring} \ browser={self.is_executor_in_browser}  |  dl_expired: ring={self.dl_expired_ring} \ browser={self.dl_expired_in_browser}  |  task_done: ring={self.task_done_ring} \ browser={self.task_done_in_browser}'
+        return f'chat_message: ring={self.chat_message_ring} \ browser={self.chat_message_in_browser}  |  is_executor: ring={self.is_executor_ring} \ browser={self.is_executor_in_browser}  |  dl_expired: ring={self.dl_expired_ring} \ browser={self.dl_expired_in_browser}  |  task_done: ring={self.task_done_ring} \ browser={self.task_done_in_browser}'

@@ -27,6 +27,7 @@ class DepartmentForUsersInfoSerializer(serializers.Serializer):
     title = serializers.CharField()
     description = serializers.CharField()
     parent = serializers.CharField()
+    company = serializers.IntegerField()
     color = serializers.CharField()
 
 
@@ -40,14 +41,16 @@ class CustomizationSerializer(serializers.ModelSerializer):
 class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notifications
-        fields = ('id', *(i for i in [j for j in Notifications().__dict__.keys()][3::]))
+        fields = (
+            'id', *(i for i in [j for j in Notifications().__dict__.keys()][3::]))
         read_only_fields = ('id',)
 
 
 class ReminderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Reminders
-        fields = ('id', *(i for i in [j for j in Reminders().__dict__.keys()][3::]))
+        fields = (
+            'id', *(i for i in [j for j in Reminders().__dict__.keys()][3::]))
         read_only_fields = ('id',)
 
 
@@ -69,7 +72,8 @@ class ProfileUserSerializer(serializers.ModelSerializer):
         read_only_fields = ('id',)
 
     def create(self, validated_data):
-        raise MethodNotAllowed('POST', detail='Creation is not allowed using this serializer.')
+        raise MethodNotAllowed(
+            'POST', detail='Creation is not allowed using this serializer.')
 
     def update(self, instance, validated_data):
         links_data = validated_data.pop('links', [])
@@ -79,8 +83,10 @@ class ProfileUserSerializer(serializers.ModelSerializer):
         instance.phone = validated_data.get('phone', instance.phone)
         instance.city = validated_data.get('city', instance.city)
         instance.birthday = validated_data.get('birthday', instance.birthday)
-        instance.first_name = validated_data.get('first_name', instance.first_name)
-        instance.last_name = validated_data.get('last_name', instance.last_name)
+        instance.first_name = validated_data.get(
+            'first_name', instance.first_name)
+        instance.last_name = validated_data.get(
+            'last_name', instance.last_name)
         instance.save()
 
         if customization_data:
@@ -104,7 +110,8 @@ class ProfileUserSerializer(serializers.ModelSerializer):
         links_title = instance.links.all().values_list('title', flat=True)
         for link_data in links_data:
             if link_data['title'] in links_title:
-                Link.objects.filter(title=link_data['title']).update(**link_data)
+                Link.objects.filter(
+                    title=link_data['title']).update(**link_data)
             else:
                 Link.objects.create(user=instance, **link_data)
         return instance
@@ -118,10 +125,8 @@ class ProfileUserForCompanySerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
-            'id', 'email', 'first_name', 'last_name',
-            'phone', 'image_identifier', 'date_joined',
-            'links', 'positions', 'departments', 'city',
-            'birthday'
+            'id', 'email', 'first_name', 'last_name', 'otchestwo',
+            'phone', 'business_phone', 'city', 'image_identifier', 'date_joined', 'links', 'positions', 'departments',
         )
 
     def to_representation(self, instance):
