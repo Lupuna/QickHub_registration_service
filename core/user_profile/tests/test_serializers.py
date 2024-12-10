@@ -53,8 +53,8 @@ class ProfileUserSerializerTestCase(Settings):
             'reminder': {'days_before_start_task': 1},
             'notification': {'chat_message_ring': True},
             'links': [
-                {'title': 'Link 1', 'link': 'http://updatedlink1.com'},
-                {'title': 'Link 3', 'link': 'http://link3.com'},
+                {'title': 0, 'link': 'http://updatedlink1.com'},
+                {'title': 1, 'link': 'http://link3.com'},
             ]
         }
 
@@ -115,7 +115,7 @@ class ProfileUserSerializerTestCase(Settings):
                          self.validated_data['customization']['font_size'])
 
         self.assertTrue(Link.objects.filter(
-            user=self.user, title='Link 3').exists())
+            user=self.user, title=0).exists())
 
         updated_reminder = updated_user.reminder
         self.assertEqual(updated_reminder.days_before_start_task,
