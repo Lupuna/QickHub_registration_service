@@ -1,3 +1,4 @@
+import loguru
 from django.core.files import File
 from django.core.files.storage import FileSystemStorage
 from rest_framework import serializers
@@ -8,10 +9,15 @@ from user_profile.tasks import upload_file
 
 
 class LinkSerializer(serializers.ModelSerializer):
+    title = serializers.SerializerMethodField()
+
     class Meta:
         model = Link
         fields = ('id', 'title', 'link')
         read_only_fields = ('id',)
+
+    def get_title(self, obj):
+        return obj.get_title_display()
 
 
 class PositionForUsersInfoSerializer(serializers.Serializer):
@@ -71,6 +77,14 @@ class ProfileUserSerializer(serializers.ModelSerializer):
         )
         read_only_fields = ('id',)
 
+    def to_internal_value(self, data):
+        result = super().to_internal_value(data)
+        if 'links' in data:
+            result['links'] = [
+                {'title': link['title'], 'link': link['link']} for link in data['links']
+            ]
+        return result
+
     def create(self, validated_data):
         raise MethodNotAllowed(
             'POST', detail='Creation is not allowed using this serializer.')
@@ -108,10 +122,12 @@ class ProfileUserSerializer(serializers.ModelSerializer):
             notification.save()
 
         links_title = instance.links.all().values_list('title', flat=True)
+
         for link_data in links_data:
             if link_data['title'] in links_title:
                 Link.objects.filter(
-                    title=link_data['title']).update(**link_data)
+                    title=link_data['title']
+                ).update(**link_data)
             else:
                 Link.objects.create(user=instance, **link_data)
         return instance
@@ -125,7 +141,7 @@ class ProfileUserForCompanySerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
-            'id', 'email', 'first_name', 'last_name', 'otchestwo',
+            'id', 'email', 'first_name', 'last_name', 'otchestwo', 'birthday',
             'phone', 'business_phone', 'city', 'image_identifier', 'date_joined', 'links', 'positions', 'departments',
         )
 
