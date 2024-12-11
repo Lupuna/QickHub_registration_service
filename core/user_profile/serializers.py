@@ -141,7 +141,7 @@ class ProfileUserForCompanySerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
-            'id', 'email', 'first_name', 'last_name', 'otchestwo',
+            'id', 'email', 'first_name', 'last_name', 'otchestwo', 'birthday',
             'phone', 'business_phone', 'city', 'image_identifier', 'date_joined', 'links', 'positions', 'departments',
         )
 

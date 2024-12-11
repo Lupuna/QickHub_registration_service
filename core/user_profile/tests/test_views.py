@@ -89,6 +89,7 @@ class ProfileAPIViewSetTestCase(Settings):
                 "image_identifier": "c3f1b16c-8102-45b7-b8b5-666f268982fc",
                 "date_joined": "2024-11-25T04:57:29Z",
                 "links": [],
+                'birthday': None,
                 "positions": [
                     {
                         "id": 4,
