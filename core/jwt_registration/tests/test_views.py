@@ -8,6 +8,7 @@ from rest_framework_simplejwt.exceptions import TokenError
 from itsdangerous import BadSignature, SignatureExpired
 from freezegun import freeze_time
 from django.utils import timezone
+from django.conf import settings
 
 
 class RegistrationAPITestCase(APITestCase):
@@ -242,9 +243,10 @@ class EmailVerifyTestCase(APITestCase):
             'email': 'test@gmail.com'
         }
         self.client = APIClient()
-        self.url = 'http://localhost:8000/account/api/v1/email-verify/'
+        self.url = settings.REGISTRATION_SERVICE_URL + \
+            reverse('to_email_verify')
 
-    @patch('jwt_registration.views.send_mail')
+    @patch('jwt_registration.tasks.send_verification_email.delay')
     def test_email_verify_successful(self, mock_send_mail):
         response = self.client.post(self.url, self.data_to_post)
 
@@ -275,7 +277,7 @@ class EmailVerifyTestCase(APITestCase):
         self.assertEqual(
             response.data, {'detail': 'Email is already verified.'})
 
-    @patch('jwt_registration.views.send_mail')
+    @patch('jwt_registration.tasks.send_verification_email.delay')
     def test_invalid_token(self, mock_send_mail):
         response = self.client.post(self.url, self.data_to_post)
 
@@ -290,7 +292,7 @@ class EmailVerifyTestCase(APITestCase):
         self.assertEqual(response.status_code, 406)
         self.assertEqual(response.data, {'error': 'Invalid token'})
 
-    @patch('jwt_registration.views.send_mail')
+    @patch('jwt_registration.tasks.send_verification_email.delay')
     def test_token_expired(self, mock_send_mail):
         response = self.client.post(self.url, self.data_to_post)
 
@@ -304,7 +306,7 @@ class EmailVerifyTestCase(APITestCase):
             self.assertEqual(response.status_code, 406)
             self.assertEqual(response.data, {'error': 'Token expired'})
 
-    @patch('jwt_registration.views.send_mail')
+    @patch('jwt_registration.tasks.send_verification_email.delay')
     def test_user_does_not_exists(self, mock_send_mail):
         self.data_to_post.update({'email': 'asf@gmail.com'})
         response = self.client.post(self.url, self.data_to_post)

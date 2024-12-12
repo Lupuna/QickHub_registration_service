@@ -213,6 +213,7 @@ STORAGE_SECRET_KEY = os.getenv('SECRET_STORAGE_KEY')
 BUCKET_NAME = 'bucket-for-user-avatar'
 STORAGE_URL = f'https://s3.storage.selcloud.ru/'
 COMPANY_SERVICE_URL = 'http://92.63.67.98:8002/company-service/{}'
+REGISTRATION_SERVICE_URL = 'http://92.63.67.98:8000'
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.yandex.ru'
@@ -222,3 +223,6 @@ EMAIL_USE_TLS = False
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER + '@yandex.ru'
+
+CELERY_TASK_ALWAYS_EAGER = True
+CELERY_TASK_EAGER_PROPAGATES = True
