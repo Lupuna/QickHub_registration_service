@@ -140,6 +140,24 @@ class ProfileUserForCompanySerializer(serializers.ModelSerializer):
         return representation
 
 
+class ProfileUserForDepSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ('email', 'phone', 'business_phone', 'image_identifier', 'city',
+                  'birthday', 'first_name', 'last_name', 'otchestwo', 'date_joined')
+
+
+class DepartmentInfoSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    company = serializers.IntegerField()
+    title = serializers.CharField()
+    description = serializers.CharField()
+    parent = serializers.IntegerField()
+    users = ProfileUserForDepSerializer(many=True)
+    color = serializers.CharField()
+
+
 class ImageSerializer(serializers.Serializer):
     image = serializers.ImageField(required=True, write_only=True)
     user = serializers.IntegerField(required=True, write_only=True)

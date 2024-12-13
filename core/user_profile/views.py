@@ -14,9 +14,10 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.decorators import action
 
 import requests
+from django.forms.models import model_to_dict
 from core.swagger_info import response_for_upload_image, request_for_upload_image
 from user_profile.models import User
-from user_profile.serializers import ProfileUserSerializer, ImageSerializer, ProfileUserForCompanySerializer
+from user_profile.serializers import ProfileUserSerializer, ImageSerializer, ProfileUserForCompanySerializer, ProfileUserForDepSerializer, DepartmentInfoSerializer
 
 
 class ProfileAPIVewSet(GenericViewSet, RetrieveModelMixin, UpdateModelMixin):
@@ -60,6 +61,58 @@ class ProfileAPIVewSet(GenericViewSet, RetrieveModelMixin, UpdateModelMixin):
             users, many=True, context=context)
 
         return Response(users_info.data, status=status.HTTP_200_OK)
+
+    @action(methods=['get'], detail=False, url_path='company/(?P<company_pk>\d+)/dep/(?P<dep_pk>\d+)', url_name='get_users_by_dep')
+    def get_users_by_dep(self, request, company_pk, dep_pk):
+        url = settings.COMPANY_SERVICE_URL.format(
+            f'/api/v1/company/companies/{company_pk}/departments/{dep_pk}/')
+        response = requests.get(url=url, )
+        if response.status_code != 200:
+            return Response({"error": "info wasn't get"}, status=response.status_code)
+        department_data = response.json()
+
+        users_emails = [user['email'] for user in department_data['users']]
+        users = User.objects.filter(email__in=users_emails)
+        users_info = [model_to_dict(
+            user, fields=ProfileUserForDepSerializer.Meta.fields) for user in users]
+
+        for user in department_data['users']:
+            for user_info in users_info:
+                if user_info['email'] == user['email']:
+                    user.update(user_info)
+                    break
+
+        department_ser = DepartmentInfoSerializer(department_data)
+
+        return Response(department_ser.data, status=status.HTTP_200_OK)
+
+    @action(methods=['get'], detail=False, url_path='company/(?P<company_pk>\d+)/deps', url_name='get_users_by_deps')
+    def get_users_by_deps(self, request, company_pk):
+        url = settings.COMPANY_SERVICE_URL.format(
+            f'/api/v1/company/companies/{company_pk}/departments/')
+        response = requests.get(url=url, )
+        if response.status_code != 200:
+            return Response({"error": "info wasn't get"}, status=response.status_code)
+        departments_data = response.json()
+
+        users_emails = []
+        for department in departments_data:
+            for user in department['users']:
+                users_emails.append(user['email'])
+        users = User.objects.filter(email__in=users_emails)
+        users_info = [model_to_dict(
+            user, fields=ProfileUserForDepSerializer.Meta.fields) for user in users]
+
+        for department in departments_data:
+            for user in department['users']:
+                for user_info in users_info:
+                    if user['email'] == user_info['email']:
+                        user.update(user_info)
+                        break
+
+        departments_ser = DepartmentInfoSerializer(departments_data, many=True)
+
+        return Response(departments_ser.data, status=status.HTTP_200_OK)
 
 
 class ImageAPIView(APIView):
