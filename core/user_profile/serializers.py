@@ -176,3 +176,4 @@ class ImageSerializer(serializers.Serializer):
         storage.save(image_name, File(image))
         upload_file.delay(storage.path(image_name))
         return {'status': True}
+      

@@ -174,3 +174,4 @@ class Notifications(models.Model):
 
     def __str__(self) -> str:
         return f'chat_message: ring={self.chat_message_ring} \ browser={self.chat_message_in_browser}  |  is_executor: ring={self.is_executor_ring} \ browser={self.is_executor_in_browser}  |  dl_expired: ring={self.dl_expired_ring} \ browser={self.dl_expired_in_browser}  |  task_done: ring={self.task_done_ring} \ browser={self.task_done_in_browser}'
+     
