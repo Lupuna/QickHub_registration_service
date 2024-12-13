@@ -190,4 +190,3 @@ class IsEmailVerifiedView(APIView):
         user.save()
 
         return Response({'detail': 'Email verified succesfully!'}, status=status.HTTP_200_OK)
-      

@@ -9,8 +9,6 @@ from django.utils.translation import gettext_lazy as _
 
 from user_profile.managers import UserManager
 
-import datetime
-
 
 class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(_('email filed'), unique=True, blank=False)
@@ -43,6 +41,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(_("first name"), max_length=150, blank=True)
     last_name = models.CharField(_("last name"), max_length=150, blank=True)
     otchestwo = models.CharField(_('otchestwo'), max_length=150, blank=True)
+    gender = models.CharField(_('gender'), max_length=255, blank=True)
+    email_verified = models.BooleanField(default=False)
 
     is_staff = models.BooleanField(
         _("staff status"),
@@ -114,11 +114,19 @@ class Customization(models.Model):
 
 
 class Link(models.Model):
+    class TitleChoices(models.IntegerChoices):
+        DISCORD = 0, 'discord'
+        VK = 1, 'vk'
+        TELEGRAM = 2, 'telegram'
+        SKYPE = 3, 'skype'
+
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='links',
         help_text=_('connection with User ')
     )
-    title = models.CharField(max_length=255, verbose_name=_('url name'))
+    title = models.PositiveSmallIntegerField(
+        choices=TitleChoices.choices, default=TitleChoices.TELEGRAM, verbose_name=_('url name')
+    )
     link = models.URLField()
 
     class Meta:
@@ -127,7 +135,7 @@ class Link(models.Model):
         unique_together = ["user", "title"]
 
     def __str__(self):
-        return self.title
+        return str(self.title)
 
 
 class Reminders(models.Model):
@@ -173,5 +181,4 @@ class Notifications(models.Model):
         verbose_name_plural = _('Notifications')
 
     def __str__(self) -> str:
-        return f'chat_message: ring={self.chat_message_ring} \ browser={self.chat_message_in_browser}  |  is_executor: ring={self.is_executor_ring} \ browser={self.is_executor_in_browser}  |  dl_expired: ring={self.dl_expired_ring} \ browser={self.dl_expired_in_browser}  |  task_done: ring={self.task_done_ring} \ browser={self.task_done_in_browser}'
-     
+        return f'chat_message: ring={self.chat_message_ring} \\ browser={self.chat_message_in_browser}  |  is_executor: ring={self.is_executor_ring} \\ browser={self.is_executor_in_browser}  |  dl_expired: ring={self.dl_expired_ring} \\ browser={self.dl_expired_in_browser}  |  task_done: ring={self.task_done_ring} \\ browser={self.task_done_in_browser}'
