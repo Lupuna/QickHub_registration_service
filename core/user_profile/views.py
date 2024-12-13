@@ -65,7 +65,7 @@ class ProfileAPIVewSet(GenericViewSet, RetrieveModelMixin, UpdateModelMixin):
     @action(methods=['get'], detail=False, url_path='company/(?P<company_pk>\d+)/dep/(?P<dep_pk>\d+)', url_name='get_users_by_dep')
     def get_users_by_dep(self, request, company_pk, dep_pk):
         url = settings.COMPANY_SERVICE_URL.format(
-            f'/api/v1/company/companies/{company_pk}/departments/{dep_pk}/')
+            f'api/v1/company/companies/{company_pk}/departments/{dep_pk}/')
         response = requests.get(url=url, )
         if response.status_code != 200:
             return Response({"error": "info wasn't get"}, status=response.status_code)
@@ -89,7 +89,7 @@ class ProfileAPIVewSet(GenericViewSet, RetrieveModelMixin, UpdateModelMixin):
     @action(methods=['get'], detail=False, url_path='company/(?P<company_pk>\d+)/deps', url_name='get_users_by_deps')
     def get_users_by_deps(self, request, company_pk):
         url = settings.COMPANY_SERVICE_URL.format(
-            f'/api/v1/company/companies/{company_pk}/departments/')
+            f'api/v1/company/companies/{company_pk}/departments/')
         response = requests.get(url=url, )
         if response.status_code != 200:
             return Response({"error": "info wasn't get"}, status=response.status_code)
