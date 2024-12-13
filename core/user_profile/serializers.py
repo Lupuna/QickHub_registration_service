@@ -1,4 +1,3 @@
-import loguru
 from django.core.files import File
 from django.core.files.storage import FileSystemStorage
 from rest_framework import serializers
@@ -36,6 +35,23 @@ class DepartmentForUsersInfoSerializer(serializers.Serializer):
     company = serializers.IntegerField()
     color = serializers.CharField()
 
+
+class ProfileUserForDepSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ('email', 'phone', 'business_phone', 'image_identifier', 'city',
+                  'birthday', 'first_name', 'last_name', 'otchestwo', 'date_joined')
+
+
+class DepartmentInfoSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    company = serializers.IntegerField()
+    title = serializers.CharField()
+    description = serializers.CharField()
+    parent = serializers.IntegerField()
+    users = ProfileUserForDepSerializer(many=True)
+    color = serializers.CharField()
 
 class CustomizationSerializer(serializers.ModelSerializer):
     class Meta:

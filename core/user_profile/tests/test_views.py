@@ -27,7 +27,8 @@ class ProfileAPIViewSetTestCase(Settings):
 
     def user_login(self):
         client = APIClient()
-        client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.refresh.access_token}')
+        client.credentials(HTTP_AUTHORIZATION=f'Bearer {
+                           self.refresh.access_token}')
         return client
 
     def test_retrieve_with_cache(self):
@@ -62,6 +63,7 @@ class ProfileAPIViewSetTestCase(Settings):
         mock_response.status_code = 200
         mock_response.json.return_value = [
             {
+                'id': 2,
                 "email": "us@example.com",
                 "positions": [
                     {
@@ -79,6 +81,7 @@ class ProfileAPIViewSetTestCase(Settings):
         client = self.user_login()
         users_expected = [
             {
+                "id": 2,
                 "email": "us@example.com",
                 "first_name": "zhumshut",
                 "last_name": "",
@@ -89,7 +92,6 @@ class ProfileAPIViewSetTestCase(Settings):
                 "image_identifier": "c3f1b16c-8102-45b7-b8b5-666f268982fc",
                 "date_joined": "2024-11-25T04:57:29Z",
                 "links": [],
-                'birthday': None,
                 "positions": [
                     {
                         "id": 4,
@@ -104,10 +106,109 @@ class ProfileAPIViewSetTestCase(Settings):
         ]
 
         with self.assertNumQueries(3):
-            response = client.get('http://127.0.0.1:8000' + reverse(
+            response = client.get(settings.REGISTRATION_SERVICE_URL + reverse(
                 'user-get_users_by_company', kwargs={"company_pk": 1}), HTTP_HOST='127.0.0.1')
-            response.data[0].pop('id')
             self.assertEqual(users_expected, response.data)
+
+    @patch('user_profile.views.requests.get')
+    def test_get_users_by_dep(self, mock_get):
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "id": 1,
+            "company": 1,
+            "title": "dep 1",
+            "description": "",
+            "parent": 0,
+            "users": [
+                {
+                    "id": 2,
+                    "email": "us@example.com"
+                }
+            ],
+            "color": "rgb(177,171,233)"
+        }
+        mock_get.return_value = mock_response
+        client = self.user_login()
+        data_expected = {
+            'id': 1,
+            'company': 1,
+            'title': 'dep 1',
+            'description': '',
+            'parent': 0,
+            'users': [
+                {
+                    'email': 'us@example.com',
+                    'phone': 'null',
+                    'business_phone': None,
+                    'city': None,
+                    'birthday': None,
+                    'first_name': 'zhumshut',
+                    'last_name': '',
+                    'otchestwo': '',
+                    'date_joined': '2024-11-25T04:57:29Z'
+                }
+            ],
+            'color': 'rgb(177,171,233)'
+        }
+
+        response = client.get(settings.REGISTRATION_SERVICE_URL + reverse('user-get_users_by_dep',
+                              kwargs={"company_pk": 1, 'dep_pk': 1}), HTTP_HOST='127.0.0.1')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, data_expected)
+
+    @patch('user_profile.views.requests.get')
+    def test_get_users_by_deps(self, mock_get):
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = [
+            {
+                "id": 1,
+                "company": 1,
+                "title": "dep 1",
+                "description": "",
+                "parent": 0,
+                "users": [
+                    {
+                        "id": 2,
+                        "email": "us@example.com"
+                    }
+                ],
+                "color": "rgb(177,171,233)"
+            }
+        ]
+        mock_get.return_value = mock_response
+        client = self.user_login()
+        data_expected = [
+            {
+                'id': 1,
+                'company': 1,
+                'title': 'dep 1',
+                'description': '',
+                'parent': 0,
+                'users': [
+                    {
+                        'email': 'us@example.com',
+                        'phone': 'null',
+                        'business_phone': None,
+                        'city': None,
+                        'birthday': None,
+                        'first_name': 'zhumshut',
+                        'last_name': '',
+                        'otchestwo': '',
+                        'date_joined': '2024-11-25T04:57:29Z'
+                    }
+                ],
+                'color': 'rgb(177,171,233)'
+            }
+        ]
+
+        response = client.get(settings.REGISTRATION_SERVICE_URL + reverse('user-get_users_by_deps',
+                              kwargs={"company_pk": 1}), HTTP_HOST='127.0.0.1')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, data_expected)
 
 
 @patch('user_profile.serializers.upload_file', side_effect=mock_upload_file)
@@ -136,7 +237,8 @@ class UpdateImportantDataAPIViewTestCase(APITestCase):
     def user_login(self):
         client = APIClient()
         client.force_login(self.user)
-        client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.refresh.access_token}')
+        client.credentials(HTTP_AUTHORIZATION=f'Bearer {
+                           self.refresh.access_token}')
         return client
 
     def test_successful_post_request(self, mock_upload_file):
