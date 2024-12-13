@@ -9,7 +9,6 @@ from user_profile.tasks import upload_file
 
 class LinkSerializer(serializers.ModelSerializer):
     title = serializers.SerializerMethodField()
-
     class Meta:
         model = Link
         fields = ('id', 'title', 'link')
@@ -17,7 +16,6 @@ class LinkSerializer(serializers.ModelSerializer):
 
     def get_title(self, obj):
         return obj.get_title_display()
-
 
 class PositionForUsersInfoSerializer(serializers.Serializer):
     id = serializers.IntegerField()
@@ -34,7 +32,6 @@ class DepartmentForUsersInfoSerializer(serializers.Serializer):
     parent = serializers.CharField()
     company = serializers.IntegerField()
     color = serializers.CharField()
-
 
 class ProfileUserForDepSerializer(serializers.ModelSerializer):
 
@@ -170,7 +167,6 @@ class ProfileUserForCompanySerializer(serializers.ModelSerializer):
         representation['departments'] = pos_deps[idx][1]
 
         return representation
-
 
 class ImageSerializer(serializers.Serializer):
     image = serializers.ImageField(required=True, write_only=True)

@@ -56,7 +56,6 @@ class Settings(TestCase):
         cls.customization = Customization.objects.create(
             user=cls.user
         )
-
         cls.reminder = Reminders.objects.create(
             user=cls.user
         )
