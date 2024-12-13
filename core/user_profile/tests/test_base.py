@@ -22,8 +22,8 @@ class Settings(TestCase):
             password='test_password',
             first_name='test_first_name',
             last_name='test_last_name',
-            image_identifier='d14fd3b8-2f36-4793-87e5-ae5ac108c237',
-            date_joined='2024-11-19T18:12:03.445840Z'
+            image_identifier = 'd14fd3b8-2f36-4793-87e5-ae5ac108c237',
+            date_joined = '2024-11-19T18:12:03.445840Z'
         )
 
         cls.zhumshut = User.objects.create(
@@ -37,19 +37,19 @@ class Settings(TestCase):
 
         cls.link_1 = Link.objects.create(
             user=cls.user,
-            title=0,
+            title='test_link_1',
             link='https://code.djangoproject.com/wiki/IntegrityError'
         )
 
         cls.link_2 = Link.objects.create(
             user=cls.user,
-            title=2,
+            title='test_link_2',
             link='https://code.djangoproject.com/wiki/IntegrityError'
         )
 
         cls.link_3 = Link.objects.create(
             user=cls.user,
-            title=1,
+            title='test_link_3',
             link='https://code.djangoproject.com/wiki/IntegrityError'
         )
 
@@ -57,11 +57,11 @@ class Settings(TestCase):
             user=cls.user
         )
 
-        cls.reminder = Reminders.objects.create(
+        cls.reminder=Reminders.objects.create(
             user=cls.user
         )
 
-        cls.notification = Notifications.objects.create(
+        cls.notification=Notifications.objects.create(
             user=cls.user
         )
 

@@ -10,10 +10,7 @@ response_for_registration = {
         examples=[
             OpenApiExample(
                 name="Successful Registration",
-                value={
-                    'refresh': 'string',
-                    'access': 'string'
-                },
+                value={},
                 description="A successful registration returns both refresh and access tokens.",
                 response_only=True,
                 status_codes=["201"]
@@ -189,6 +186,7 @@ response_for_important_data = {
     )
 }
 
+
 response_for_refresh_token = {
     200: OpenApiResponse(
         response={'ok': 'ok'},
@@ -245,16 +243,6 @@ response_for_validate_token = {
     )
 }
 
-request_for_logout = {
-    'application/json': {
-        'type': 'object',
-        'properties': {
-            'refresh_token': {
-                'type': 'string',
-            },
-        },
-    }
-}
 
 response_for_logout = {
     205: OpenApiResponse(
@@ -342,9 +330,6 @@ request_for_important_info = {
                 'required': ['email'],
             },
             'password': {'type': 'string'},
-            'refresh_token': {
-                'type': 'string',
-            },
         },
         'required': ['data_to_update', 'refresh_token', 'password'],
     }
