@@ -2,7 +2,7 @@ from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
 from django.utils.translation import gettext_lazy as _
 
-from user_profile.models import Link, Reminders, Notifications
+from user_profile.models import Link,Reminders,Notifications
 from .test_base import Settings
 
 
@@ -73,7 +73,7 @@ class TestCustomization(Settings):
 class TestLink(Settings):
 
     def test_str_method(self):
-        self.assertEqual(str(self.link_1), str(self.link_1.title))
+        self.assertEqual(str(self.link_1), self.link_1.title)
 
     def test_unique_together_constraint(self):
         with self.assertRaises(IntegrityError):
@@ -91,44 +91,41 @@ class TestLink(Settings):
 class TestReminders(Settings):
 
     def test_str(self):
-        self.assertEqual(str(self.reminder),
-                         'days_before_start_task: 1  |  exact_time_of_day_before_start_task: 8  |  time_before_deadline: 30  |  remind_about_expire_in: В начале следующей недели')
-
+        self.assertEqual(str(self.reminder),'days_before_start_task: 1  |  exact_time_of_day_before_start_task: 8  |  time_before_deadline: 30  |  remind_about_expire_in: В начале следующей недели')
     def test_verbose_names(self):
-        self.assertEqual(self.reminder._meta.verbose_name, _('Reminder'))
-        self.assertEqual(self.reminder._meta.verbose_name_plural, _("Reminders"))
+        self.assertEqual(self.reminder._meta.verbose_name,_('Reminder'))
+        self.assertEqual(self.reminder._meta.verbose_name_plural,_("Reminders"))
 
     def test_default_vals(self):
         self.assertEqual(self.reminder.days_before_start_task, 1)
         self.assertEqual(self.reminder.exact_time_of_day_before_start_task, 8)
         self.assertEqual(self.reminder.time_before_deadline, 30)
         self.assertEqual(self.reminder.remind_about_expire_in, 'В начале следующей недели')
-
+    
     def test_relation(self):
-        user = self.reminder.user
-        self.assertEqual(user, self.user)
+        user=self.reminder.user
+        self.assertEqual(user,self.user)
 
 
 class NotificationTestCase(Settings):
 
     def test_str(self):
-        self.assertEqual(str(self.notification),
-                         'chat_message: ring=True \ browser=True  |  is_executor: ring=True \ browser=True  |  dl_expired: ring=True \ browser=True  |  task_done: ring=True \ browser=True')
-
+        self.assertEqual(str(self.notification),'chat_message: ring=True \ browser=True  |  is_executor: ring=True \ browser=True  |  dl_expired: ring=True \ browser=True  |  task_done: ring=True \ browser=True')
+    
     def test_verbose_names(self):
-        self.assertEqual(self.notification._meta.verbose_name, _('Notification'))
-        self.assertEqual(self.notification._meta.verbose_name_plural, _("Notifications"))
+        self.assertEqual(self.notification._meta.verbose_name,_('Notification'))
+        self.assertEqual(self.notification._meta.verbose_name_plural,_("Notifications"))
 
     def test_default_vals(self):
-        self.assertEqual(self.notification.chat_message_ring, True)
-        self.assertEqual(self.notification.chat_message_in_browser, True)
-        self.assertEqual(self.notification.is_executor_ring, True)
-        self.assertEqual(self.notification.is_executor_in_browser, True)
-        self.assertEqual(self.notification.dl_expired_ring, True)
-        self.assertEqual(self.notification.dl_expired_in_browser, True)
-        self.assertEqual(self.notification.task_done_ring, True)
-        self.assertEqual(self.notification.task_done_in_browser, True)
+        self.assertEqual(self.notification.chat_message_ring,True)
+        self.assertEqual(self.notification.chat_message_in_browser,True)
+        self.assertEqual(self.notification.is_executor_ring,True)
+        self.assertEqual(self.notification.is_executor_in_browser,True)
+        self.assertEqual(self.notification.dl_expired_ring,True)
+        self.assertEqual(self.notification.dl_expired_in_browser,True)
+        self.assertEqual(self.notification.task_done_ring,True)
+        self.assertEqual(self.notification.task_done_in_browser,True)
 
     def test_relation(self):
-        user = self.notification.user
-        self.assertEqual(user, self.user)
+        user=self.notification.user
+        self.assertEqual(user,self.user)

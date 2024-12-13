@@ -6,11 +6,13 @@ class UserManager(BaseUserManager):
 
     def create_user(self, email, password=None, **extra_fields):
         extra_fields.setdefault("is_staff", False)
+        extra_fields.setdefault('email_verified', False)
         return self._create_user(email, password, **extra_fields)
 
     def create_superuser(self, email, password=None, **extra_fields):
         extra_fields.setdefault("is_superuser", True)
         extra_fields.setdefault("is_staff", True)
+        extra_fields.setdefault('email_verified', False)
         if extra_fields.get("is_staff") is not True:
             raise ValueError("Superuser must have is_staff=True.")
 
@@ -32,4 +34,3 @@ class UserManager(BaseUserManager):
             raise ValueError("The first_name must be set")
         if not extra_fields.get('last_name'):
             raise ValueError("The last_name must be set")
-
