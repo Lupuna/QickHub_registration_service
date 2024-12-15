@@ -246,7 +246,7 @@ class EmailVerifyTestCase(APITestCase):
         self.url = settings.REGISTRATION_SERVICE_URL + \
             reverse('to_email_verify')
 
-    @patch('jwt_registration.tasks.send_verification_email.delay')
+    @patch('jwt_registration.tasks.send_celery_mail.delay')
     def test_email_verify_successful(self, mock_send_mail):
         response = self.client.post(self.url, self.data_to_post)
 
@@ -277,7 +277,7 @@ class EmailVerifyTestCase(APITestCase):
         self.assertEqual(
             response.data, {'detail': 'Email is already verified.'})
 
-    @patch('jwt_registration.tasks.send_verification_email.delay')
+    @patch('jwt_registration.tasks.send_celery_mail.delay')
     def test_invalid_token(self, mock_send_mail):
         response = self.client.post(self.url, self.data_to_post)
 
@@ -292,7 +292,7 @@ class EmailVerifyTestCase(APITestCase):
         self.assertEqual(response.status_code, 406)
         self.assertEqual(response.data, {'error': 'Invalid token'})
 
-    @patch('jwt_registration.tasks.send_verification_email.delay')
+    @patch('jwt_registration.tasks.send_celery_mail.delay')
     def test_token_expired(self, mock_send_mail):
         response = self.client.post(self.url, self.data_to_post)
 
@@ -306,7 +306,7 @@ class EmailVerifyTestCase(APITestCase):
             self.assertEqual(response.status_code, 406)
             self.assertEqual(response.data, {'error': 'Token expired'})
 
-    @patch('jwt_registration.tasks.send_verification_email.delay')
+    @patch('jwt_registration.tasks.send_celery_mail.delay')
     def test_user_does_not_exists(self, mock_send_mail):
         self.data_to_post.update({'email': 'asf@gmail.com'})
         response = self.client.post(self.url, self.data_to_post)
@@ -314,3 +314,88 @@ class EmailVerifyTestCase(APITestCase):
         self.assertEqual(response.status_code, 404)
         self.assertEqual(
             response.data, {'error': 'User with this email does not exist'})
+
+
+class PasswordRecoveryTestCase(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create(email='test_email@gmail.com')
+        self.user.set_password('test_password1')
+        self.user.save()
+        self.data_to_post = {'email': 'test_email@gmail.com'}
+        self.password_to_post = {
+            'pas1': 'test_new_pas', 'pas2': 'test_new_pas'}
+        self.send_mail_url = settings.REGISTRATION_SERVICE_URL + \
+            reverse('password_recovery')
+        self.client = APIClient()
+
+    @patch('jwt_registration.tasks.send_celery_mail.delay')
+    def test_send_email(self, mock_send_mail):
+        response = self.client.post(self.send_mail_url, self.data_to_post)
+
+        mock_send_mail.assert_called_once()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, {
+                         'detail': 'We sent mail on your email to recovery your password'})
+
+    @patch('jwt_registration.tasks.send_celery_mail.delay')
+    def test_wrong_email(self, mock_send_mail):
+        self.data_to_post.update({'email': 'sgsd@gmail.com'})
+        response = self.client.post(self.send_mail_url, self.data_to_post)
+
+        self.assertEqual(response.data, {'error': 'Incorrect email'})
+        self.assertEqual(response.status_code, 400)
+
+    @patch('jwt_registration.tasks.send_celery_mail.delay')
+    def test_set_new_password_OK(self, mock_send_mail):
+        response = self.client.post(self.send_mail_url, self.data_to_post)
+
+        args, kwargs = mock_send_mail.call_args
+        reset_pas_url = kwargs['message'].split()[-1]
+        response = self.client.post(reset_pas_url, self.password_to_post)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.data, {'data': 'password recovered successfully'})
+
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password(
+            self.password_to_post['pas1']))
+
+    @patch('jwt_registration.tasks.send_celery_mail.delay')
+    def test_set_new_password_BAD(self, mock_send_mail):
+        response = self.client.post(self.send_mail_url, self.data_to_post)
+
+        args, kwargs = mock_send_mail.call_args
+        reset_pas_url = kwargs['message'].split()[-1]
+        self.password_to_post.update({'pas2': 'asaspdaf94'})
+        response = self.client.post(reset_pas_url, self.password_to_post)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data, {'error': 'try again'})
+
+    @patch('jwt_registration.tasks.send_celery_mail.delay')
+    def test_invalid_token(self, mock_send_mail):
+        response = self.client.post(self.send_mail_url, self.data_to_post)
+
+        args, kwargs = mock_send_mail.call_args
+        reset_pas_url = kwargs['message'].split()[-1]
+        url_with_invalid_token = '/'.join(
+            reset_pas_url.split('/')[:-2]) + '/fasdfasd/'
+        response = self.client.post(
+            url_with_invalid_token, self.password_to_post)
+
+        self.assertEqual(response.status_code, 406)
+        self.assertEqual(response.data, {'error': 'Invalid token'})
+
+    @patch('jwt_registration.tasks.send_celery_mail.delay')
+    def test_token_expired(self, mock_send_mail):
+        response = self.client.post(self.send_mail_url, self.data_to_post)
+
+        args, kwargs = mock_send_mail.call_args
+        reset_pas_url = kwargs['message'].split()[-1]
+
+        with freeze_time(timezone.now()+timezone.timedelta(hours=2)):
+            response = self.client.post(
+                reset_pas_url, self.password_to_post)
+            self.assertEqual(response.status_code, 406)
+            self.assertEqual(response.data, {'error': 'Token expired'})

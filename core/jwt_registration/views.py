@@ -15,8 +15,9 @@ from django.db import transaction
 from django.core.mail import send_mail
 from django.conf import settings
 from django.urls import reverse
+from django.shortcuts import redirect
 from user_profile.models import User
-from jwt_registration.tasks import send_verification_email
+from jwt_registration.tasks import send_celery_mail
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 
 
@@ -93,6 +94,67 @@ class LogoutAPIView(APIView):
         return Response({'detail': 'Successfully logged out'}, status=status.HTTP_205_RESET_CONTENT)
 
 
+class PasswordRecoveryMailAPIView(APIView):
+    def post(self, request):
+        user_email = request.data.get('email')
+        if not user_email:
+            return Response({'error': 'Provide email adress for sending mail with password recovery instructions'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(email=user_email)
+        except User.DoesNotExist:
+            return Response({'error': 'Incorrect email'}, status=status.HTTP_400_BAD_REQUEST)
+
+        token_ser = URLSafeTimedSerializer(
+            secret_key=settings.SECRET_KEY)
+        token = token_ser.dumps(
+            {'user_email': user.email}, salt='password-recovery')
+
+        recovery_url = settings.REGISTRATION_SERVICE_URL + \
+            reverse('new_password_confirm', kwargs={'token': token})
+        send_celery_mail.delay(
+            subject='Password recovery',
+            message=f'You can recovery uor password following this link\n{
+                recovery_url}',
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user_email],
+            auth_user=settings.EMAIL_HOST_USER,
+            auth_password=settings.EMAIL_HOST_PASSWORD
+        )
+
+        return Response({'detail': 'We sent mail on your email to recovery your password'}, status=status.HTTP_200_OK)
+
+
+class PasswordRecoveryConfirmAPIView(APIView):
+    def post(self, request, token):
+        try:
+            decoded_token_ser = URLSafeTimedSerializer(
+                secret_key=settings.SECRET_KEY)
+            decoded_token = decoded_token_ser.loads(
+                token, salt='password-recovery', max_age=60)
+        except SignatureExpired:
+            return Response({'error': 'Token expired'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+        except BadSignature:
+            return Response({'error': 'Invalid token'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        user_email = decoded_token['user_email']
+        try:
+            user = User.objects.get(email=user_email)
+        except User.DoesNotExist:
+            return Response({'error': 'smth goes wrong'}, status=status.HTTP_403_FORBIDDEN)
+
+        password1, password2 = request.data.get(
+            'pas1', None), request.data.get('pas2', None)
+        if (password1 and password2) and (password1 == password2):
+            new_password = password1
+            user.set_password(new_password)
+            user.save()
+        else:
+            return Response({'error': 'try again'}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({'data': 'password recovered successfully'}, status=status.HTTP_200_OK)
+
+
 class UpdateImportantDataAPIView(APIView):
     permission_classes = (IsAuthenticated,)
 
@@ -129,9 +191,6 @@ class UpdateImportantDataAPIView(APIView):
             raise ValidationError({'error': 'Current password is incorrect'})
 
 
-@extend_schema(
-    tags=['EmailVerify']
-)
 class EmailVerifyView(APIView):
     @extend_schema(request=['email'], responses=[200])
     def post(self, request):
@@ -152,9 +211,9 @@ class EmailVerifyView(APIView):
         token = token_ser.dumps(
             {'user_id': user.id}, salt='email-verify')
 
-        verification_url = 'http://92.63.67.98:8000' + reverse('is_email_verified',
-                                                               kwargs={'token': token})
-        send_verification_email.delay(
+        verification_url = settings.REGISTRATION_SERVICE_URL + reverse('is_email_verified',
+                                                                       kwargs={'token': token})
+        send_celery_mail.delay(
             subject='Verify your email!',
             message=f'To verify your email on QuickHub follow the link:\n{
                 verification_url}',
@@ -167,9 +226,6 @@ class EmailVerifyView(APIView):
         return Response({'detail': 'We sent mail on your email to verification'}, status=status.HTTP_200_OK)
 
 
-@extend_schema(
-    tags=['IsEmailVerified']
-)
 class IsEmailVerifiedView(APIView):
     @extend_schema(request=['token'], responses=[200])
     def get(self, request, token):
