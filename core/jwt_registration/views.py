@@ -1,3 +1,4 @@
+import requests
 from django.contrib.auth import authenticate
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
@@ -169,6 +170,15 @@ class UpdateImportantDataAPIView(APIView):
             instance=request.user, data=data_to_update, partial=True)
         if serializer.is_valid():
             put_token_on_blacklist(old_refresh_token)
+
+            if serializer.validated_data['email']:
+                data_to_company_update = {
+                    'email': serializer.validated_data['email'],
+                }
+                url = settings.COMPANY_SERVICE_URL.format(
+                    'api/v1/company/registration/users/update/')
+                requests.post(url=url, data=data_to_company_update)
+
             user = serializer.save()
             refresh = RefreshToken.for_user(user)
             return Response(
