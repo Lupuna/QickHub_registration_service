@@ -1,0 +1,23 @@
+name: Deploy project
+
+on:
+  push:
+    branches:
+      - main
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.HOST }}
+          key: ${{ secrets.KEY }}
+          username: ${{ secrets.USERNAME }}
+          port: ${{ secrets.PORT }}
+          script: |
+            cd ../${{ secrets.PATH_TO_PROJECT }}
+            docker compose -f docker-compose-build.yml down
+            git pull origin main
+            docker compose -f docker-compose-build.yml up --build -d
+            docker compose -f docker-compose-build.yml exec web-app python manage.py migrate
