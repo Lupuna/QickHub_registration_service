@@ -31,4 +31,6 @@ jobs:
         docker compose -f docker-compose.yml run --rm web-app sh -c "python manage.py migrate"
     - name: Run Tests
       run: |
+        docker compose -f docker-compose.yml run --rm -d redis
         docker compose -f docker-compose.yml run --rm web-app sh -c "python manage.py test"
+        docker compose -f docker-compose.yml stop redis
