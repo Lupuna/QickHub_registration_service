@@ -171,7 +171,7 @@ class UpdateImportantDataAPIView(APIView):
         if serializer.is_valid():
             put_token_on_blacklist(old_refresh_token)
 
-            if serializer.validated_data['email']:
+            if serializer.validated_data.get('email', None):
                 data_to_company_update = {
                     'email': serializer.validated_data['email'],
                 }
