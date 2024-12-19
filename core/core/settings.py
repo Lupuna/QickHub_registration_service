@@ -226,3 +226,16 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER + '@yandex.ru'
 
 CELERY_TASK_ALWAYS_EAGER = True
 CELERY_TASK_EAGER_PROPAGATES = True
+
+TWO_COMMITS_CONF = {
+    'services': {
+        'company': {
+            "host": COMPANY_SERVICE_URL,
+            'create': COMPANY_SERVICE_URL.format('api/v1/company/registration/users/create/'),
+            'update': COMPANY_SERVICE_URL.format('api/v1/company/registration/users/update/'),
+            'confirm': COMPANY_SERVICE_URL.format('api/v1/company/registration/users/confirm/'),
+            'rollback': COMPANY_SERVICE_URL.format('api/v1/company/registration/users/rollback/')
+        },
+        'tasks':{}
+    },
+}

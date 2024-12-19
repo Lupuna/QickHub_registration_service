@@ -11,7 +11,7 @@ from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 
 from core.swagger_info import *
 from jwt_registration.serializers import UserImportantSerializer
-from jwt_registration.utils import put_token_on_blacklist, HeadTwoCommitsPattern
+from jwt_registration.utils import put_token_on_blacklist, CreateTwoCommitsPattern, UpdateTwoCommitsPattern
 from django.db import transaction
 from django.core.mail import send_mail
 from django.conf import settings
@@ -30,17 +30,11 @@ class RegistrationAPIView(APIView):
         if serializer.is_valid():
             with transaction.atomic():
                 user = serializer.save()
-                head = HeadTwoCommitsPattern(
+                head = CreateTwoCommitsPattern(
                     data={
                         'email': user.email,
                     },
-                    self_package={
-                        'company': {
-                            'create': 'api/v1/company/registration/users/create/',
-                            'confirm': 'api/v1/company/registration/users/confirm/',
-                            'rollback': 'api/v1/company/registration/users/rollback/'
-                        },
-                    }
+                    service='company'
                 )
                 head.two_commits_operation()
 
@@ -162,6 +156,10 @@ class UpdateImportantDataAPIView(APIView):
     @extend_schema(request=request_for_important_info, responses=response_for_important_data)
     def patch(self, request):
         data_to_update = request.data.get('data_to_update')
+        try:
+            new_email = data_to_update.pop('new_email')
+        except KeyError:
+            new_email = None
         old_refresh_token = request.data.get("refresh_token")
         current_password = request.data.get('password')
         self._validate_update_request(
@@ -171,15 +169,19 @@ class UpdateImportantDataAPIView(APIView):
         if serializer.is_valid():
             put_token_on_blacklist(old_refresh_token)
 
-            if serializer.validated_data.get('email', None):
+            if new_email:
                 data_to_company_update = {
+                    'new_email': new_email,
                     'email': serializer.validated_data['email'],
                 }
-                url = settings.COMPANY_SERVICE_URL.format(
-                    'api/v1/company/registration/users/update/')
-                requests.post(url=url, data=data_to_company_update)
+                with transaction.atomic():
+                    user = serializer.save()
 
-            user = serializer.save()
+                    update_on_company = UpdateTwoCommitsPattern(data=data_to_company_update, service='company')
+                    update_on_company.two_commits_operation()     
+            else:
+                user = serializer.save()
+
             refresh = RefreshToken.for_user(user)
             return Response(
                 {
