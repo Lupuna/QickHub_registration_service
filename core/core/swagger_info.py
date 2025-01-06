@@ -75,120 +75,6 @@ response_for_registration = {
     )
 }
 
-response_for_login = {
-    200: OpenApiResponse(
-        response={
-            'refresh': 'string',
-            'access': 'string',
-        },
-        examples=[
-            OpenApiExample(
-                name="Successful Login",
-                value={},
-                description="A successful login returns both refresh and access tokens.",
-                response_only=True,
-                status_codes=["200"]
-            )
-        ],
-        description="User login successful"
-    ),
-    400: OpenApiResponse(
-        response={
-            'error': 'string',
-        },
-        examples=[
-            OpenApiExample(
-                name="Missing Credentials",
-                value={"error": "Email and password are required"},
-                description="Occurs when the email or password is not provided.",
-                response_only=True,
-                status_codes=["400"]
-            )
-        ],
-        description="User login failed due to missing credentials"
-    ),
-    401: OpenApiResponse(
-        response={
-            'error': 'string',
-        },
-        examples=[
-            OpenApiExample(
-                name="Authentication Failed",
-                value={"error": "Incorrect email or password"},
-                description="Occurs when the provided email or password is incorrect.",
-                response_only=True,
-                status_codes=["401"]
-            )
-        ],
-        description="User login failed due to incorrect credentials"
-    )
-}
-
-response_for_important_data = {
-    200: OpenApiResponse(
-        response={
-            'refresh': 'string',
-            'access': 'string'
-        },
-        description="User data updated successfully",
-        examples=[
-            OpenApiExample(
-                name="Successful Update",
-                value={},
-                description="Returned when user data is updated successfully.",
-                response_only=True,
-                status_codes=["200"]
-            )
-        ]
-    ),
-    400: OpenApiResponse(
-        response={'error': 'string'},
-        description="User data update failed due to validation errors",
-        examples=[
-            OpenApiExample(
-                name="Validation Error - data_to_update is required",
-                value={'error': 'data_to_update is required'},
-                description="Occurs when required fields are missing or invalid.",
-                response_only=True,
-                status_codes=["400"]
-            ),
-            OpenApiExample(
-                name="Validation Error - token is required",
-                value={'error': 'Refresh token is required'},
-                description="Occurs when required fields are missing or invalid.",
-                response_only=True,
-                status_codes=["400"]
-            ),
-            OpenApiExample(
-                name="Validation Error - password is required",
-                value={'error': 'Current password is required'},
-                description="Occurs when required fields are missing or invalid.",
-                response_only=True,
-                status_codes=["400"]
-            ),
-            OpenApiExample(
-                name="Validation Error - password is incorrect",
-                value={'error': 'Current password is incorrect'},
-                response_only=True,
-                status_codes=["400"]
-            )
-        ]
-    ),
-    401: OpenApiResponse(
-        response={'error': 'string'},
-        description="Authentication failed due to incorrect current password",
-        examples=[
-            OpenApiExample(
-                name="Authentication Failed",
-                value={'error': 'Current password is incorrect'},
-                description="Occurs when the provided current password does not match.",
-                response_only=True,
-                status_codes=["401"]
-            )
-        ]
-    )
-}
-
 response_for_refresh_token = {
     200: OpenApiResponse(
         response={'ok': 'ok'},
@@ -245,6 +131,45 @@ response_for_validate_token = {
     )
 }
 
+request_for_password_recovery_mail = {
+    'application/json': {
+        'type': 'object',
+        'properties': {
+            'email': {
+                'type': 'string',
+            },
+        },
+    }
+}
+
+response_for_password_recovery_mail = {
+    200: OpenApiResponse(
+        response={'detail': 'string'},
+        description='Mail sent',
+        examples=[
+            OpenApiExample(
+                name='Mail sent successfully',
+                value={
+                    'detail': 'We sent mail on your email to recovery your password'}
+            )
+        ]
+    ),
+    400: OpenApiResponse(
+        response={'error': 'string'},
+        examples=[
+            OpenApiExample(
+                name='Email was not provide',
+                value={
+                    'error': 'Provide email adress for sending mail with password recovery instructions'},
+            ),
+            OpenApiExample(
+                name='Email was not find',
+                value={'error': 'Incorrect email'},
+            )
+        ]
+    )
+}
+
 request_for_logout = {
     'application/json': {
         'type': 'object',
@@ -289,6 +214,21 @@ response_for_logout = {
     )
 }
 
+request_for_upload_image = {
+    'multipart/form-data': {
+        'type': 'object',
+        'properties': {
+            'image': {
+                'type': 'string',
+                # Указываем, что это бинарные данные (файл)
+                'format': 'binary',
+                'description': 'The image file to upload'
+            }
+        },
+        'required': ['image']
+    }
+}
+
 response_for_upload_image = {
     200: OpenApiResponse(
         response={
@@ -328,28 +268,6 @@ response_for_upload_image = {
     )
 }
 
-request_for_important_info = {
-    'application/json': {
-        'type': 'object',
-        'properties': {
-            'data_to_update': {
-                'type': 'object',
-                'properties': {
-                    'email': {'type': 'string'},
-                    'password': {'type': 'string'},
-                    'password2': {'type': 'string'}
-                },
-                'required': ['email'],
-            },
-            'password': {'type': 'string'},
-            'refresh_token': {
-                'type': 'string',
-            },
-        },
-        'required': ['data_to_update', 'refresh_token', 'password'],
-    }
-}
-
 request_for_login = {
     'application/json': {
         'type': 'object',
@@ -361,16 +279,161 @@ request_for_login = {
     }
 }
 
-request_for_upload_image = {
-    'multipart/form-data': {
+response_for_login = {
+    200: OpenApiResponse(
+        response={
+            'refresh': 'string',
+            'access': 'string',
+        },
+        examples=[
+            OpenApiExample(
+                name="Successful Login",
+                value={},
+                description="A successful login returns both refresh and access tokens.",
+                response_only=True,
+                status_codes=["200"]
+            )
+        ],
+        description="User login successful"
+    ),
+    400: OpenApiResponse(
+        response={
+            'error': 'string',
+        },
+        examples=[
+            OpenApiExample(
+                name="Missing Credentials",
+                value={"error": "Email and password are required"},
+                description="Occurs when the email or password is not provided.",
+                response_only=True,
+                status_codes=["400"]
+            )
+        ],
+        description="User login failed due to missing credentials"
+    ),
+    401: OpenApiResponse(
+        response={
+            'error': 'string',
+        },
+        examples=[
+            OpenApiExample(
+                name="Authentication Failed",
+                value={"error": "Incorrect email or password"},
+                description="Occurs when the provided email or password is incorrect.",
+                response_only=True,
+                status_codes=["401"]
+            )
+        ],
+        description="User login failed due to incorrect credentials"
+    )
+}
+
+response_for_password_recovery_confirm = {
+    200: OpenApiResponse(
+        response={
+            'detail': 'string'
+        },
+        description='Password recovered successfully',
+        examples=[
+            OpenApiExample(
+                name='Password recovered',
+                value={'detail': 'Password recovered successfully'}
+            )
+        ]
+    ),
+    406: OpenApiResponse(
+        response={
+            'error': 'string'
+        },
+        description='Password recovery not accepted',
+        examples=[
+            OpenApiExample(
+                name='Token expired',
+                value={'error': 'Token expired'},
+            ),
+            OpenApiExample(
+                name='Invalid token',
+                value={'error': 'Invalid token'}
+            ),
+        ]
+    ),
+    400: OpenApiResponse(
+        response={
+            'error': 'string'
+        },
+        description='Password recovry failed',
+        examples=[
+            OpenApiExample(
+                name='Incorrect data',
+                value={'error': 'Incorrect data'}
+            )
+        ]
+    )
+}
+
+response_for_email_verify = {
+    200: OpenApiResponse(
+        response={
+            'detail': 'string'
+        },
+        description='Mail for email verify was send',
+        examples=[
+            OpenApiExample(
+                name='Mail sent',
+                value={'detail': 'We sent mail on your email to verification'}
+            )
+        ]
+    ),
+    400: OpenApiResponse(
+        response={
+            'error': 'string'
+        },
+        description='Email was not send. Smth happend wrong',
+        examples=[
+            OpenApiExample(
+                name='Provided incorrecrt data',
+                value='serializers.errors'
+            )
+        ]
+    )
+}
+
+request_for_is_email_verified = {
+    'application/json': {
         'type': 'object',
         'properties': {
-            'image': {
-                'type': 'string',
-                'format': 'binary',  # Указываем, что это бинарные данные (файл)
-                'description': 'The image file to upload'
-            }
-        },
-        'required': ['image']
+            'token': {'type': 'string'}
+        }
     }
+}
+
+response_for_is_email_verified = {
+    200: OpenApiResponse(
+        response={
+            'detail': 'string'
+        },
+        description='Email was verify',
+        examples=[
+            OpenApiExample(
+                name='Email verified succesfully!',
+                value={'detail': 'Email verified succesfully!'}
+            )
+        ]
+    ),
+    406: OpenApiResponse(
+        response={
+            'error': 'string'
+        },
+        description='Email was not verify',
+        examples=[
+            OpenApiExample(
+                name='Token expired',
+                value={'error': 'Token expired'}
+            ),
+            OpenApiExample(
+                name='Invalid token',
+                value={'error': 'Invalid token'}
+            )
+        ]
+    )
 }

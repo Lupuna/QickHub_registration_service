@@ -10,7 +10,7 @@ from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 
 from core.swagger_info import *
-from jwt_registration.serializers import UserImportantSerializer
+from jwt_registration.serializers import RegistrationSerializer, EmailVerifySerializer, SetNewPasswordSerializer
 from jwt_registration.utils import put_token_on_blacklist, CreateTwoCommitsPattern, UpdateTwoCommitsPattern
 from django.db import transaction
 from django.core.mail import send_mail
@@ -23,20 +23,19 @@ from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 
 
 class RegistrationAPIView(APIView):
-
-    @extend_schema(request=UserImportantSerializer, responses=response_for_registration)
+    @extend_schema(request=RegistrationSerializer, responses=response_for_registration)
     def post(self, request):
-        serializer = UserImportantSerializer(data=request.data)
+        serializer = RegistrationSerializer(data=request.data)
         if serializer.is_valid():
             with transaction.atomic():
                 user = serializer.save()
-                head = CreateTwoCommitsPattern(
+                create = CreateTwoCommitsPattern(
                     data={
                         'email': user.email,
                     },
                     service='company'
                 )
-                head.two_commits_operation()
+                create.two_commits_operation()
 
             refresh = RefreshToken.for_user(user)
             refresh.payload.update({
@@ -52,7 +51,6 @@ class RegistrationAPIView(APIView):
 
 
 class LoginAPIView(APIView):
-
     @extend_schema(request=request_for_login, responses=response_for_login)
     def post(self, request):
         email = request.data.get('email')
@@ -80,7 +78,7 @@ class LoginAPIView(APIView):
 class LogoutAPIView(APIView):
     permission_classes = (IsAuthenticated,)
 
-    @extend_schema(request=None, responses=response_for_logout)
+    @extend_schema(request=request_for_logout, responses=response_for_logout)
     def post(self, request):
         refresh_token = request.data.get('refresh_token')
         if not refresh_token:
@@ -90,6 +88,7 @@ class LogoutAPIView(APIView):
 
 
 class PasswordRecoveryMailAPIView(APIView):
+    @extend_schema(request=request_for_password_recovery_mail, responses=response_for_password_recovery_mail)
     def post(self, request):
         user_email = request.data.get('email')
         if not user_email:
@@ -121,6 +120,7 @@ class PasswordRecoveryMailAPIView(APIView):
 
 
 class PasswordRecoveryConfirmAPIView(APIView):
+    @extend_schema(request=SetNewPasswordSerializer, responses=response_for_password_recovery_confirm)
     def post(self, request, token):
         try:
             decoded_token_ser = URLSafeTimedSerializer(
@@ -133,113 +133,51 @@ class PasswordRecoveryConfirmAPIView(APIView):
             return Response({'error': 'Invalid token'}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
         user_email = decoded_token['user_email']
-        try:
+        data = {
+            'email': user_email,
+            'password': request.data.get('pas1', None),
+            'password2': request.data.get('pas2', None),
+        }
+        serializer = SetNewPasswordSerializer(data=data)
+        if serializer.is_valid():
+            new_password = serializer.validated_data['password']
             user = User.objects.get(email=user_email)
-        except User.DoesNotExist:
-            return Response({'error': 'smth goes wrong'}, status=status.HTTP_403_FORBIDDEN)
-
-        password1, password2 = request.data.get(
-            'pas1', None), request.data.get('pas2', None)
-        if (password1 and password2) and (password1 == password2):
-            new_password = password1
             user.set_password(new_password)
             user.save()
-        else:
-            return Response({'error': 'try again'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'detail': 'Password recovered successfully'}, status=status.HTTP_200_OK)
 
-        return Response({'data': 'password recovered successfully'}, status=status.HTTP_200_OK)
-
-
-class UpdateImportantDataAPIView(APIView):
-    permission_classes = (IsAuthenticated,)
-
-    @extend_schema(request=request_for_important_info, responses=response_for_important_data)
-    def patch(self, request):
-        data_to_update = request.data.get('data_to_update')
-        try:
-            new_email = data_to_update.pop('new_email')
-        except KeyError:
-            new_email = None
-        old_refresh_token = request.data.get("refresh_token")
-        current_password = request.data.get('password')
-        self._validate_update_request(
-            current_password, data_to_update, old_refresh_token, request)
-        serializer = UserImportantSerializer(
-            instance=request.user, data=data_to_update, partial=True)
-        if serializer.is_valid():
-            put_token_on_blacklist(old_refresh_token)
-
-            if new_email:
-                data_to_company_update = {
-                    'new_email': new_email,
-                    'email': serializer.validated_data['email'],
-                }
-                with transaction.atomic():
-                    user = serializer.save()
-
-                    update_on_company = UpdateTwoCommitsPattern(data=data_to_company_update, service='company')
-                    update_on_company.two_commits_operation()     
-            else:
-                user = serializer.save()
-
-            refresh = RefreshToken.for_user(user)
-            return Response(
-                {
-                    'refresh_token': str(refresh),
-                    'access_token': str(refresh.access_token)
-                }, status=status.HTTP_200_OK)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    @staticmethod
-    def _validate_update_request(current_password, data_to_update, old_refresh_token, request):
-        if not data_to_update:
-            raise ValidationError({'error': 'data_to_update is required'})
-        if not old_refresh_token:
-            raise ValidationError({'error': 'Refresh token is required'})
-        if not current_password:
-            raise ValidationError({'error': 'Current password is required'})
-        if not request.user.check_password(current_password):
-            raise ValidationError({'error': 'Current password is incorrect'})
+        return Response({'error': 'Incorrect data'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class EmailVerifyView(APIView):
-    @extend_schema(request=['email'], responses=[200])
+    @extend_schema(request=EmailVerifySerializer, responses=response_for_email_verify)
     def post(self, request):
-        user_email = request.data.get('email', None)
-        if not user_email:
-            return Response({'error': 'Email was not provide'}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = EmailVerifySerializer(data=request.data)
+        if serializer.is_valid():
+            user_email = serializer.validated_data['email']
+            token_ser = URLSafeTimedSerializer(
+                secret_key=settings.SECRET_KEY)
+            token = token_ser.dumps(
+                {'user_email': user_email}, salt='email-verify')
 
-        try:
-            user = User.objects.get(email=user_email)
-        except User.DoesNotExist:
-            return Response({'error': 'User with this email does not exist'}, status=status.HTTP_404_NOT_FOUND)
+            verification_url = settings.REGISTRATION_SERVICE_URL + \
+                reverse('is_email_verified', kwargs={'token': token})
+            send_celery_mail.delay(
+                subject='Verify your email!',
+                message=f'To verify your email on QuickHub follow the link:\n{
+                    verification_url}',
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[user_email],
+                auth_user=settings.EMAIL_HOST_USER,
+                auth_password=settings.EMAIL_HOST_PASSWORD
+            )
 
-        if user.email_verified:
-            return Response({'detail': 'Email is already verified.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        token_ser = URLSafeTimedSerializer(
-            secret_key=settings.SECRET_KEY)
-        token = token_ser.dumps(
-            {'user_id': user.id}, salt='email-verify')
-
-        verification_url = settings.REGISTRATION_SERVICE_URL + reverse('is_email_verified',
-                                                                       kwargs={'token': token})
-        send_celery_mail.delay(
-            subject='Verify your email!',
-            message=f'To verify your email on QuickHub follow the link:\n{
-                verification_url}',
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[user_email],
-            auth_user=settings.EMAIL_HOST_USER,
-            auth_password=settings.EMAIL_HOST_PASSWORD
-        )
-
-        return Response({'detail': 'We sent mail on your email to verification'}, status=status.HTTP_200_OK)
+            return Response({'detail': 'We sent mail on your email to verification'}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class IsEmailVerifiedView(APIView):
-    @extend_schema(request=['token'], responses=[200])
+    @extend_schema(request=request_for_is_email_verified, responses=response_for_is_email_verified)
     def get(self, request, token):
         try:
             decoded_token_ser = URLSafeTimedSerializer(
@@ -251,8 +189,8 @@ class IsEmailVerifiedView(APIView):
         except BadSignature:
             return Response({'error': 'Invalid token'}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-        user_id = decoded_token['user_id']
-        user = User.objects.get(id=user_id)
+        user_email = decoded_token['user_email']
+        user = User.objects.get(email=user_email)
 
         user.email_verified = True
         user.save()
