@@ -26,8 +26,7 @@ class TwoCommitsPatternBase:
         return response_info
 
     def _rollback_operation(self):
-        data = self.data
-        data.update({'move': self.move})
+        data = {**self.data, **{'move': self.move}}
         rollback_info = requests.post(
             url=settings.TWO_COMMITS_CONF['services'][self.service]['rollback'], data=data)
 
