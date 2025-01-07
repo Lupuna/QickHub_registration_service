@@ -7,7 +7,7 @@ from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 from core.exeptions import TwoCommitsError
 
-from jwt_registration.utils import TwoCommitsPatternBase, TwoCommitsPatternMixin, UpdateTwoCommitsPattern, CreateTwoCommitsPattern, ConfirmTwoCommitsPattern
+from jwt_registration.utils import TwoCommitsPatternBase, TwoCommitsPattern, UpdateTwoCommitsPattern, CreateTwoCommitsPattern, ConfirmTwoCommitsPattern
 from jwt_registration.utils import put_token_on_blacklist
 from user_profile.models import User
 

@@ -46,7 +46,7 @@ class TwoCommitsPatternBase:
         return response_info
 
 
-class TwoCommitsPatternMixin(TwoCommitsPatternBase):
+class TwoCommitsPattern(TwoCommitsPatternBase):
     def two_commits_operation(self):
         first_commit_info = self._base_commit_operation()
         confirm = ConfirmTwoCommitsPattern(self.data, self.service)
@@ -60,11 +60,11 @@ class ConfirmTwoCommitsPattern(TwoCommitsPatternBase):
         return self._base_commit_operation()
 
 
-class UpdateTwoCommitsPattern(TwoCommitsPatternMixin):
+class UpdateTwoCommitsPattern(TwoCommitsPattern):
     move = 'update'
 
 
-class CreateTwoCommitsPattern(TwoCommitsPatternMixin):
+class CreateTwoCommitsPattern(TwoCommitsPattern):
     move = 'create'
 
 

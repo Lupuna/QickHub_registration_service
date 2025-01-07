@@ -1,13 +1,6 @@
 from rest_framework import serializers
 from user_profile.models import User, Customization
-
-
-def password_validating(password, password2):
-    if not (password and password2):
-        return False
-    if password2 != password:
-        return False
-    return True
+from jwt_registration.custom_validators import password_validating
 
 
 class RegistrationSerializer(serializers.ModelSerializer):
