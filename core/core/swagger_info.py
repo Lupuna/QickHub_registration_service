@@ -437,3 +437,34 @@ response_for_is_email_verified = {
         ]
     )
 }
+
+response_for_email_update = {
+    200: OpenApiResponse(
+        response={
+            'detail': 'string'
+        },
+        description='Email was update',
+        examples=[
+            OpenApiExample(
+                name='Email was update',
+                value={'detail': 'Email updated successfully'}
+            )
+        ]
+    ),
+    400: OpenApiResponse(
+        response={
+            'error': 'string'
+        },
+        description='Email was not update. smth wrong',
+        examples=[
+            OpenApiExample(
+                name='not valid',
+                value='serializers.errors'
+            ),
+            OpenApiExample(
+                name='Wrong password',
+                value='Password incorrect'
+            )
+        ]
+    )
+}

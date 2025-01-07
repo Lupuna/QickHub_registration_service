@@ -205,6 +205,7 @@ class IsEmailVerifiedView(APIView):
 class EmailUpdateAPIView(APIView):
     permission_classes = (IsAuthenticated, )
 
+    @extend_schema(request=EmailUpdateSerializer, responses=response_for_email_update)
     def post(self, request):
         serializer = EmailUpdateSerializer(
             instance=request.user, data=request.data)
