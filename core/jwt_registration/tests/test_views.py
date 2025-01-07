@@ -292,3 +292,85 @@ class PasswordRecoveryTestCase(APITestCase):
                 reset_pas_url, self.password_to_post)
             self.assertEqual(response.status_code, 406)
             self.assertEqual(response.data, {'error': 'Token expired'})
+
+
+class EmailUpdateAPIViewTestCase(APITestCase):
+    def setUp(self):
+        self.data = {
+            'new_email': 'new@gmail.com',
+            'password': 'test_pas',
+            'password2': 'test_pas'
+
+        }
+        self.client = APIClient()
+        self.url = reverse('email_update')
+
+    @patch('jwt_registration.views.UpdateTwoCommitsPattern.two_commits_operation')
+    def test_email_update(self, mock_two_commits):
+        user = User.objects.create_user(
+            email='old@gmail.com',
+            first_name='ali',
+            last_name='prida',
+        )
+        user.set_password('test_pas')
+        user.save()
+        refresh = RefreshToken.for_user(user)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {
+                                refresh.access_token}')
+        mock_two_commits.return_value = {'company': 200}
+
+        response = self.client.post(self.url, data=self.data)
+        mock_two_commits.assert_called_once()
+        user = User.objects.get(email='new@gmail.com')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(user.email, 'new@gmail.com')
+
+    @patch('jwt_registration.views.UpdateTwoCommitsPattern.two_commits_operation')
+    def test_email_update_failure(self, mock_two_commits):
+        user = User.objects.create_user(
+            email='old@gmail.com',
+            first_name='ali',
+            last_name='prida',
+        )
+        user.set_password('test_pas')
+        user.save()
+        refresh = RefreshToken.for_user(user)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {
+                                refresh.access_token}')
+        mock_two_commits.return_value = {'company': 200}
+
+        data = self.data
+        data.update({'new_email': 'old@gmail.com'})
+        response = self.client.post(self.url, data=data)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            str(response.data['non_field_errors'][0]), 'Email already exists')
+
+        data = self.data
+        data.update({'password': 'oldcom'})
+        response = self.client.post(self.url, data=data)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            str(response.data['non_field_errors'][0]), 'Please enter password correctly')
+
+    @patch('jwt_registration.views.UpdateTwoCommitsPattern.two_commits_operation')
+    def test_email_update_failure_wrong_pas(self, mock_two_commits):
+        user = User.objects.create_user(
+            email='old@gmail.com',
+            first_name='ali',
+            last_name='prida',
+        )
+        user.set_password('test_pas')
+        user.save()
+        refresh = RefreshToken.for_user(user)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {
+                                refresh.access_token}')
+        mock_two_commits.return_value = {'company': 200}
+
+        data = self.data
+        data.update({'password': 'oldcom', 'password2': 'oldcom'})
+        response = self.client.post(self.url, data=data)
+        self.assertEqual(response.status_code, 400)
+        print(response.data)
+        self.assertEqual(
+            str(response.data[0]), 'Password incorrect')

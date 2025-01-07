@@ -1,7 +1,7 @@
 from django.test import TestCase
 from rest_framework.exceptions import ValidationError
 
-from jwt_registration.serializers import RegistrationSerializer, SetNewPasswordSerializer, EmailVerifySerializer
+from jwt_registration.serializers import RegistrationSerializer, SetNewPasswordSerializer, EmailVerifySerializer, EmailUpdateSerializer
 from user_profile.models import User
 
 
@@ -95,3 +95,30 @@ class EmailVerifySerializerTestCase(TestCase):
         self.user.delete()
         serializer = EmailVerifySerializer(data=self.data)
         self.assertFalse(serializer.is_valid())
+
+
+class EmailUpdateSerializerTestCase(TestCase):
+    def setUp(self):
+        self.data = {
+            'new_email': 'new@gmail.com',
+            'password': 'test_password',
+            'password2': 'test_password'
+        }
+        self.user = User(email='old@gmail.com',
+                         first_name='test', last_name='testlast')
+        self.user.set_password('test_password')
+        self.user.save()
+
+    def test_email_update_ok(self):
+        serializer = EmailUpdateSerializer(instance=self.user, data=self.data)
+        self.assertTrue(serializer.is_valid())
+        updated_user = serializer.save()
+        self.assertEqual(updated_user.email, 'new@gmail.com')
+
+    def test_email_update_not_ok(self):
+        data = self.data
+        data.update({'password': 'qqqw', 'password2': 'qqqw'})
+        serializer = EmailUpdateSerializer(instance=self.user, data=data)
+        self.assertTrue(serializer.is_valid())
+        with self.assertRaises(ValidationError):
+            updated_user = serializer.save()

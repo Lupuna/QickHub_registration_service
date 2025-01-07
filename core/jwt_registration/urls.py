@@ -2,7 +2,7 @@ from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView, TokenVerifyView
 
 from jwt_registration.views import (
-    LoginAPIView, RegistrationAPIView, LogoutAPIView, EmailVerifyView, IsEmailVerifiedView, PasswordRecoveryConfirmAPIView, PasswordRecoveryMailAPIView
+    LoginAPIView, RegistrationAPIView, LogoutAPIView, EmailVerifyView, IsEmailVerifiedView, PasswordRecoveryConfirmAPIView, PasswordRecoveryMailAPIView, EmailUpdateAPIView
 )
 
 urlpatterns = [
@@ -18,4 +18,5 @@ urlpatterns = [
          name='password_recovery'),
     path('v1/new-password-confirm/<str:token>/',
          PasswordRecoveryConfirmAPIView.as_view(), name='new_password_confirm'),
+    path('v1/email-update/', EmailUpdateAPIView.as_view(), name='email_update'),
 ]

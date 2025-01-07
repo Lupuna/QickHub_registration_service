@@ -75,3 +75,34 @@ class EmailVerifySerializer(SetNewPasswordSerializer):
             raise serializers.ValidationError('Email is already verified')
 
         return data
+
+
+class EmailUpdateSerializer(serializers.ModelSerializer):
+    new_email = serializers.EmailField(write_only=True, required=True)
+    password = serializers.CharField(write_only=True, required=True)
+    password2 = serializers.CharField(write_only=True, required=True)
+
+    class Meta:
+        model = User
+        fields = ('new_email', 'password', 'password2')
+
+    def validate(self, data):
+        new_email = data.get('new_email', None)
+        password = data.get('password', None)
+        password2 = data.get('password2', None)
+        if not password_validating(password, password2):
+            raise serializers.ValidationError(
+                'Please enter password correctly')
+        if User.objects.filter(email=new_email).exists():
+            raise serializers.ValidationError('Email already exists')
+
+        return data
+
+    def update(self, user, validated_data):
+        if not user.check_password(validated_data['password']):
+            raise serializers.ValidationError('Password incorrect')
+
+        user.email = validated_data['new_email']
+        user.email_verified = False
+        user.save()
+        return user

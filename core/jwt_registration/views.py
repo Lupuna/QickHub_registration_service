@@ -10,7 +10,7 @@ from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 
 from core.swagger_info import *
-from jwt_registration.serializers import RegistrationSerializer, EmailVerifySerializer, SetNewPasswordSerializer
+from jwt_registration.serializers import RegistrationSerializer, EmailVerifySerializer, SetNewPasswordSerializer, EmailUpdateSerializer
 from jwt_registration.utils import put_token_on_blacklist, CreateTwoCommitsPattern, UpdateTwoCommitsPattern
 from django.db import transaction
 from django.core.mail import send_mail
@@ -150,6 +150,8 @@ class PasswordRecoveryConfirmAPIView(APIView):
 
 
 class EmailVerifyView(APIView):
+    # permission_classes = (IsAuthenticated, )
+
     @extend_schema(request=EmailVerifySerializer, responses=response_for_email_verify)
     def post(self, request):
         serializer = EmailVerifySerializer(data=request.data)
@@ -177,6 +179,8 @@ class EmailVerifyView(APIView):
 
 
 class IsEmailVerifiedView(APIView):
+    # permission_classes = (IsAuthenticated, )
+
     @extend_schema(request=request_for_is_email_verified, responses=response_for_is_email_verified)
     def get(self, request, token):
         try:
@@ -196,3 +200,21 @@ class IsEmailVerifiedView(APIView):
         user.save()
 
         return Response({'detail': 'Email verified succesfully!'}, status=status.HTTP_200_OK)
+
+
+class EmailUpdateAPIView(APIView):
+    permission_classes = (IsAuthenticated, )
+
+    def post(self, request):
+        serializer = EmailUpdateSerializer(
+            instance=request.user, data=request.data)
+        if serializer.is_valid():
+            with transaction.atomic():
+                old_email = request.user.email
+                user = serializer.save()
+                update = UpdateTwoCommitsPattern(
+                    data={'email': old_email, 'new_email': user.email}, service='company')
+                update.two_commits_operation()
+            return Response({'detail': 'Email updated successfully'}, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
