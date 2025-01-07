@@ -46,3 +46,8 @@ class TestUrls(SimpleTestCase):
         url = reverse('new_password_confirm', kwargs={'token': 'any'})
         self.assertEqual(resolve(url).func.view_class,
                          views.PasswordRecoveryConfirmAPIView)
+
+    def test_email_update(self):
+        url = reverse('email_update')
+        self.assertEqual(resolve(url).func.view_class,
+                         views.EmailUpdateAPIView)
