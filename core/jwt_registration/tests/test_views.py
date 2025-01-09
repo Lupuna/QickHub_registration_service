@@ -31,7 +31,7 @@ class RegistrationAPITestCase(APITestCase):
             'password2': 'wrong_test_pass123',
         }
 
-    @patch("jwt_registration.views.HeadTwoCommitsPattern.two_commits_operation")
+    @patch("jwt_registration.views.CreateTwoCommitsPattern.two_commits_operation")
     def test_registration(self, test):
         response = self.client.post(self.registration_url, self.user_data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -127,126 +127,19 @@ class RegistrationAPITestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
-class UpdateImportantDataAPIViewTestCase(APITestCase):
-    def setUp(self):
-        self.user = User.objects.create_user(
-            email='test_email@gmail.com', password='password_123', first_name='first', last_name='last')
-        self.url = reverse('update_important_data')
-        self.refresh = RefreshToken.for_user(self.user)
-        self.data = {
-            'data_to_update': {
-                'password': 'password_123',
-                'password2': 'password_123',
-                'email': 'test_email@gmail.com'
-            },
-            'refresh_token': str(self.refresh),
-            'password': 'password_123'
-        }
-
-        self.data_without_data_to_update = {
-            'refresh_token': str(self.refresh),
-            'password': 'password_123'
-        }
-
-        self.data_without_refresh_token = {
-            'data_to_update': {
-                'password': 'password_123',
-                'password2': 'password_123',
-                'email': 'test_email@gmail.com'
-            },
-            'password': 'password_123'
-        }
-
-        self.data_without_password = {
-            'data_to_update': {
-                'password': 'password_123',
-                'password2': 'password_123',
-                'email': 'test_email@gmail.com'
-            },
-            'refresh_token': str(self.refresh),
-        }
-
-        self.data_with_invalid_password = {
-            'data_to_update': {
-                'password': 'password_123',
-                'password2': 'password_123',
-                'email': 'test_email@gmail.com'
-            },
-            'refresh_token': str(self.refresh),
-            'password': 'wrong_password'
-        }
-
-    def test_successful_patch_request(self):
-        client = APIClient()
-        client.force_login(user=self.user)
-        client.credentials(HTTP_AUTHORIZATION=f'Bearer {
-                           self.refresh.access_token}')
-        response = client.patch(self.url, self.data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.user.refresh_from_db()
-        self.assertEqual(self.user.email, self.data['data_to_update']['email'])
-        self.assertIn('refresh_token', response.data)
-        self.assertIn('access_token', response.data)
-
-    def test_missing_data_to_update(self):
-        client = APIClient()
-        client.force_login(user=self.user)
-        client.credentials(HTTP_AUTHORIZATION=f'Bearer {
-                           self.refresh.access_token}')
-        response = client.patch(
-            self.url, self.data_without_data_to_update, format='json')
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data['error'], 'data_to_update is required')
-
-    def test_missing_refresh_token(self):
-        client = APIClient()
-        client.force_login(user=self.user)
-        client.credentials(HTTP_AUTHORIZATION=f'Bearer {
-                           self.refresh.access_token}')
-        response = client.patch(
-            self.url, self.data_without_refresh_token, format='json')
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data['error'], 'Refresh token is required')
-
-    def test_missing_password(self):
-        client = APIClient()
-        client.force_login(user=self.user)
-        client.credentials(HTTP_AUTHORIZATION=f'Bearer {
-                           self.refresh.access_token}')
-        response = client.patch(
-            self.url, self.data_without_password, format='json')
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data['error'],
-                         'Current password is required')
-
-    def test_invalid_password(self):
-        client = APIClient()
-        client.force_login(user=self.user)
-        client.credentials(HTTP_AUTHORIZATION=f'Bearer {
-                           self.refresh.access_token}')
-        response = client.patch(
-            self.url, self.data_with_invalid_password, format='json')
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data['error'],
-                         'Current password is incorrect')
-
-    def test_not_authenticated(self):
-        client = APIClient()
-        response = client.patch(self.url, self.data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
-
 class EmailVerifyTestCase(APITestCase):
     def setUp(self):
         self.user = User.objects.create(email='test@gmail.com')
         self.data_to_post = {
-            'email': 'test@gmail.com'
+            'email': 'test@gmail.com',
+            'password': 'test_password',
+            'password2': 'test_password'
         }
         self.client = APIClient()
         self.url = settings.REGISTRATION_SERVICE_URL + \
             reverse('to_email_verify')
 
-    @patch('jwt_registration.tasks.send_verification_email.delay')
+    @patch('jwt_registration.tasks.send_celery_mail.delay')
     def test_email_verify_successful(self, mock_send_mail):
         response = self.client.post(self.url, self.data_to_post)
 
@@ -275,9 +168,9 @@ class EmailVerifyTestCase(APITestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
-            response.data, {'detail': 'Email is already verified.'})
+            str(response.data['non_field_errors'][0]), 'Email is already verified')
 
-    @patch('jwt_registration.tasks.send_verification_email.delay')
+    @patch('jwt_registration.tasks.send_celery_mail.delay')
     def test_invalid_token(self, mock_send_mail):
         response = self.client.post(self.url, self.data_to_post)
 
@@ -292,7 +185,7 @@ class EmailVerifyTestCase(APITestCase):
         self.assertEqual(response.status_code, 406)
         self.assertEqual(response.data, {'error': 'Invalid token'})
 
-    @patch('jwt_registration.tasks.send_verification_email.delay')
+    @patch('jwt_registration.tasks.send_celery_mail.delay')
     def test_token_expired(self, mock_send_mail):
         response = self.client.post(self.url, self.data_to_post)
 
@@ -306,11 +199,178 @@ class EmailVerifyTestCase(APITestCase):
             self.assertEqual(response.status_code, 406)
             self.assertEqual(response.data, {'error': 'Token expired'})
 
-    @patch('jwt_registration.tasks.send_verification_email.delay')
+    @patch('jwt_registration.tasks.send_celery_mail.delay')
     def test_user_does_not_exists(self, mock_send_mail):
         self.data_to_post.update({'email': 'asf@gmail.com'})
         response = self.client.post(self.url, self.data_to_post)
 
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 400)
         self.assertEqual(
-            response.data, {'error': 'User with this email does not exist'})
+            str(response.data['non_field_errors'][0]), 'Email was not find')
+
+
+class PasswordRecoveryTestCase(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create(email='test_email@gmail.com')
+        self.user.set_password('test_password1')
+        self.user.save()
+        self.data_to_post = {'email': 'test_email@gmail.com'}
+        self.password_to_post = {
+            'pas1': 'test_new_pas', 'pas2': 'test_new_pas'}
+        self.send_mail_url = settings.REGISTRATION_SERVICE_URL + \
+            reverse('password_recovery')
+        self.client = APIClient()
+
+    @patch('jwt_registration.tasks.send_celery_mail.delay')
+    def test_send_email(self, mock_send_mail):
+        response = self.client.post(self.send_mail_url, self.data_to_post)
+
+        mock_send_mail.assert_called_once()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, {
+                         'detail': 'We sent mail on your email to recovery your password'})
+
+    @patch('jwt_registration.tasks.send_celery_mail.delay')
+    def test_wrong_email(self, mock_send_mail):
+        self.data_to_post.update({'email': 'sgsd@gmail.com'})
+        response = self.client.post(self.send_mail_url, self.data_to_post)
+
+        self.assertEqual(response.data, {'error': 'Incorrect email'})
+        self.assertEqual(response.status_code, 400)
+
+    @patch('jwt_registration.tasks.send_celery_mail.delay')
+    def test_set_new_password_OK(self, mock_send_mail):
+        response = self.client.post(self.send_mail_url, self.data_to_post)
+
+        args, kwargs = mock_send_mail.call_args
+        reset_pas_url = kwargs['message'].split()[-1]
+        response = self.client.post(reset_pas_url, self.password_to_post)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.data, {'detail': 'Password recovered successfully'})
+
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password(
+            self.password_to_post['pas1']))
+
+    @patch('jwt_registration.tasks.send_celery_mail.delay')
+    def test_set_new_password_BAD(self, mock_send_mail):
+        response = self.client.post(self.send_mail_url, self.data_to_post)
+
+        args, kwargs = mock_send_mail.call_args
+        reset_pas_url = kwargs['message'].split()[-1]
+        self.password_to_post.update({'pas2': 'asaspdaf94'})
+        response = self.client.post(reset_pas_url, self.password_to_post)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data, {'error': 'Incorrect data'})
+
+    @patch('jwt_registration.tasks.send_celery_mail.delay')
+    def test_invalid_token(self, mock_send_mail):
+        response = self.client.post(self.send_mail_url, self.data_to_post)
+
+        args, kwargs = mock_send_mail.call_args
+        reset_pas_url = kwargs['message'].split()[-1]
+        url_with_invalid_token = '/'.join(
+            reset_pas_url.split('/')[:-2]) + '/fasdfasd/'
+        response = self.client.post(
+            url_with_invalid_token, self.password_to_post)
+
+        self.assertEqual(response.status_code, 406)
+        self.assertEqual(response.data, {'error': 'Invalid token'})
+
+    @patch('jwt_registration.tasks.send_celery_mail.delay')
+    def test_token_expired(self, mock_send_mail):
+        response = self.client.post(self.send_mail_url, self.data_to_post)
+
+        args, kwargs = mock_send_mail.call_args
+        reset_pas_url = kwargs['message'].split()[-1]
+
+        with freeze_time(timezone.now()+timezone.timedelta(hours=2)):
+            response = self.client.post(
+                reset_pas_url, self.password_to_post)
+            self.assertEqual(response.status_code, 406)
+            self.assertEqual(response.data, {'error': 'Token expired'})
+
+
+class EmailUpdateAPIViewTestCase(APITestCase):
+    def setUp(self):
+        self.data = {
+            'new_email': 'new@gmail.com',
+            'password': 'test_pas',
+            'password2': 'test_pas'
+
+        }
+        self.client = APIClient()
+        self.url = reverse('email_update')
+
+    @patch('jwt_registration.views.UpdateTwoCommitsPattern.two_commits_operation')
+    def test_email_update(self, mock_two_commits):
+        user = User.objects.create_user(
+            email='old@gmail.com',
+            first_name='ali',
+            last_name='prida',
+        )
+        user.set_password('test_pas')
+        user.save()
+        refresh = RefreshToken.for_user(user)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {
+                                refresh.access_token}')
+        mock_two_commits.return_value = {'company': 200}
+
+        response = self.client.post(self.url, data=self.data)
+        mock_two_commits.assert_called_once()
+        user = User.objects.get(email='new@gmail.com')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(user.email, 'new@gmail.com')
+
+    @patch('jwt_registration.views.UpdateTwoCommitsPattern.two_commits_operation')
+    def test_email_update_failure(self, mock_two_commits):
+        user = User.objects.create_user(
+            email='old@gmail.com',
+            first_name='ali',
+            last_name='prida',
+        )
+        user.set_password('test_pas')
+        user.save()
+        refresh = RefreshToken.for_user(user)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {
+                                refresh.access_token}')
+        mock_two_commits.return_value = {'company': 200}
+
+        data = self.data
+        data.update({'new_email': 'old@gmail.com'})
+        response = self.client.post(self.url, data=data)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            str(response.data['non_field_errors'][0]), 'Email already exists')
+
+        data = self.data
+        data.update({'password': 'oldcom'})
+        response = self.client.post(self.url, data=data)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            str(response.data['non_field_errors'][0]), 'Please enter password correctly')
+
+    @patch('jwt_registration.views.UpdateTwoCommitsPattern.two_commits_operation')
+    def test_email_update_failure_wrong_pas(self, mock_two_commits):
+        user = User.objects.create_user(
+            email='old@gmail.com',
+            first_name='ali',
+            last_name='prida',
+        )
+        user.set_password('test_pas')
+        user.save()
+        refresh = RefreshToken.for_user(user)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {
+                                refresh.access_token}')
+        mock_two_commits.return_value = {'company': 200}
+
+        data = self.data
+        data.update({'password': 'oldcom', 'password2': 'oldcom'})
+        response = self.client.post(self.url, data=data)
+        self.assertEqual(response.status_code, 400)
+        print(response.data)
+        self.assertEqual(
+            str(response.data[0]), 'Password incorrect')

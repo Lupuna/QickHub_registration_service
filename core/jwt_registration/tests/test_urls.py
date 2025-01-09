@@ -9,7 +9,8 @@ class TestUrls(SimpleTestCase):
 
     def test_registration_url_is_resolve(self):
         url = reverse('registration')
-        self.assertEqual(resolve(url).func.view_class, views.RegistrationAPIView)
+        self.assertEqual(resolve(url).func.view_class,
+                         views.RegistrationAPIView)
 
     def test_login_url_is_resolve(self):
         url = reverse('login')
@@ -27,6 +28,26 @@ class TestUrls(SimpleTestCase):
         url = reverse('token_verify')
         self.assertEqual(resolve(url).func.view_class, TokenVerifyView)
 
-    def test_update_important_data_url_is_resolve(self):
-        url = reverse('update_important_data')
-        self.assertEqual(resolve(url).func.view_class, views.UpdateImportantDataAPIView)
+    def test_email_verify_is_resolve(self):
+        url = reverse('to_email_verify')
+        self.assertEqual(resolve(url).func.view_class, views.EmailVerifyView)
+
+    def test_is_email_verified_is_resolve(self):
+        url = reverse('is_email_verified', kwargs={'token': 'any'})
+        self.assertEqual(resolve(url).func.view_class,
+                         views.IsEmailVerifiedView)
+
+    def test_password_recovery_mail(self):
+        url = reverse('password_recovery')
+        self.assertEqual(resolve(url).func.view_class,
+                         views.PasswordRecoveryMailAPIView)
+
+    def test_password_recovery_confirm(self):
+        url = reverse('new_password_confirm', kwargs={'token': 'any'})
+        self.assertEqual(resolve(url).func.view_class,
+                         views.PasswordRecoveryConfirmAPIView)
+
+    def test_email_update(self):
+        url = reverse('email_update')
+        self.assertEqual(resolve(url).func.view_class,
+                         views.EmailUpdateAPIView)
