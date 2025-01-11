@@ -214,6 +214,7 @@ BUCKET_NAME = 'bucket-for-user-avatar'
 STORAGE_URL = f'https://s3.storage.selcloud.ru/'
 COMPANY_SERVICE_URL = 'http://92.63.67.98:8002/company-service/{}'
 REGISTRATION_SERVICE_URL = 'http://92.63.67.98:8000'
+TASK_SERVICE_URL = 'http://92.63.67.98:8004/task-service/{}'
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.yandex.ru'
@@ -236,6 +237,12 @@ TWO_COMMITS_CONF = {
             'confirm': COMPANY_SERVICE_URL.format('api/v1/company/registration/users/confirm/'),
             'rollback': COMPANY_SERVICE_URL.format('api/v1/company/registration/users/rollback/')
         },
-        'tasks': {}
+        'tasks': {
+            "host": TASK_SERVICE_URL,
+            'create': TASK_SERVICE_URL.format('registration/api/v1/users/create/'),
+            'update': TASK_SERVICE_URL.format('registration/api/v1/users/update/'),
+            'confirm': TASK_SERVICE_URL.format('registration/api/v1/users/confirm/'),
+            'rollback': TASK_SERVICE_URL.format('registration/api/v1/users/rollback/')
+        }
     },
 }
