@@ -29,13 +29,14 @@ class RegistrationAPIView(APIView):
         if serializer.is_valid():
             with transaction.atomic():
                 user = serializer.save()
-                create = CreateTwoCommitsPattern(
-                    data={
-                        'email': user.email,
-                    },
-                    service='company'
-                )
-                create.two_commits_operation()
+                for service in settings.TWO_COMMITS_CONF:
+                    create = CreateTwoCommitsPattern(
+                        data={
+                            'email': user.email,
+                        },
+                        service=service
+                    )
+                    create.two_commits_operation()
 
             refresh = RefreshToken.for_user(user)
             refresh.payload.update({
@@ -150,7 +151,7 @@ class PasswordRecoveryConfirmAPIView(APIView):
 
 
 class EmailVerifyView(APIView):
-    # permission_classes = (IsAuthenticated, )
+    permission_classes = (IsAuthenticated, )
 
     @extend_schema(request=EmailVerifySerializer, responses=response_for_email_verify)
     def post(self, request):
@@ -179,7 +180,7 @@ class EmailVerifyView(APIView):
 
 
 class IsEmailVerifiedView(APIView):
-    # permission_classes = (IsAuthenticated, )
+    permission_classes = (IsAuthenticated, )
 
     @extend_schema(request=request_for_is_email_verified, responses=response_for_is_email_verified)
     def get(self, request, token):
@@ -213,9 +214,10 @@ class EmailUpdateAPIView(APIView):
             with transaction.atomic():
                 old_email = request.user.email
                 user = serializer.save()
-                update = UpdateTwoCommitsPattern(
-                    data={'email': old_email, 'new_email': user.email}, service='company')
-                update.two_commits_operation()
+                for service in settings.TWO_COMMITS_CONF:
+                    update = UpdateTwoCommitsPattern(
+                        data={'email': old_email, 'new_email': user.email}, service=service)
+                    update.two_commits_operation()
             return Response({'detail': 'Email updated successfully'}, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
