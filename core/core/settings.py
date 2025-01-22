@@ -207,7 +207,10 @@ hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
 INTERNAL_IPS += [".".join(ip.split(".")[:-1] + ["1"]) for ip in ips]
 
 CACHE_LIVE_TIME = 60 * 60
-USER_PROFILE_CACHE_KEY = 'user_profile_{user}'
+USER_PROFILE_VIEW_CACHE_KEY = 'user_profile_{user}_{view}'
+USER_PROFILE_SER_CACHE_KEY = 'user_profile_{ser}_{user}'
+JWT_REG_VIEW_CACHE_KEY = 'jwt_{view}_{email}'
+JWT_REG_SERIALIZERS_CACHE_KEY = 'jwt_{ser}_{email}'
 STORAGE_ACCESS_KEY = os.getenv('ACCESS_STORAGE_KEY')
 STORAGE_SECRET_KEY = os.getenv('SECRET_STORAGE_KEY')
 BUCKET_NAME = 'bucket-for-user-avatar'

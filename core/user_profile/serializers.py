@@ -1,5 +1,7 @@
 from django.core.files import File
 from django.core.files.storage import FileSystemStorage
+from django.core.cache import cache
+from django.conf import settings
 from rest_framework import serializers
 from rest_framework.exceptions import MethodNotAllowed, ValidationError
 
@@ -9,6 +11,7 @@ from user_profile.tasks import upload_file
 
 class LinkSerializer(serializers.ModelSerializer):
     title = serializers.SerializerMethodField()
+
     class Meta:
         model = Link
         fields = ('id', 'title', 'link')
@@ -16,6 +19,7 @@ class LinkSerializer(serializers.ModelSerializer):
 
     def get_title(self, obj):
         return obj.get_title_display()
+
 
 class PositionForUsersInfoSerializer(serializers.Serializer):
     id = serializers.IntegerField()
@@ -33,6 +37,7 @@ class DepartmentForUsersInfoSerializer(serializers.Serializer):
     company = serializers.IntegerField()
     color = serializers.CharField()
 
+
 class ProfileUserForDepSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -49,6 +54,7 @@ class DepartmentInfoSerializer(serializers.Serializer):
     parent = serializers.IntegerField()
     users = ProfileUserForDepSerializer(many=True)
     color = serializers.CharField()
+
 
 class CustomizationSerializer(serializers.ModelSerializer):
     class Meta:
@@ -168,6 +174,7 @@ class ProfileUserForCompanySerializer(serializers.ModelSerializer):
 
         return representation
 
+
 class ImageSerializer(serializers.Serializer):
     image = serializers.ImageField(required=True, write_only=True)
     user = serializers.IntegerField(required=True, write_only=True)
@@ -177,7 +184,8 @@ class ImageSerializer(serializers.Serializer):
         user = validated_data['user']
 
         try:
-            photo_uuid = User.objects.get(id=user).image_identifier
+            photo_uuid = cache.get_or_set(settings.USER_PROFILE_SER_CACHE_KEY.format(
+                ser='ImageSerializer', user=user), User.objects.get(id=user).image_identifier, settings.CACHE_LIVE_TIME)
         except User.DoesNotExist as error:
             raise ValidationError(error)
 

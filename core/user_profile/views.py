@@ -22,23 +22,21 @@ from user_profile.serializers import ProfileUserSerializer, ImageSerializer, Pro
 
 class ProfileAPIVewSet(GenericViewSet, RetrieveModelMixin, UpdateModelMixin):
     serializer_class = ProfileUserSerializer
-    queryset = User.objects.all().select_related('customization', 'reminder',
-                                                 'notification').prefetch_related('links')
+    queryset = cache.get_or_set(settings.USER_PROFILE_VIEW_CACHE_KEY.format(user='all', view='ProfileAPIVewSet'), User.objects.all(
+    ).select_related('customization', 'reminder', 'notification').prefetch_related('links'), settings.CACHE_LIVE_TIME)
     permission_classes = (IsAuthenticated,)
 
     def get_object(self):
         user = self.kwargs.get('pk')
-        cache_key = settings.USER_PROFILE_CACHE_KEY.format(user=user)
-        instance = cache.get(cache_key)
-        if instance is None:
-            instance = super().get_object()
-            cache.set(cache_key, instance, timeout=settings.CACHE_LIVE_TIME)
+        instance = cache.get_or_set(settings.USER_PROFILE_VIEW_CACHE_KEY.format(
+            user=user, view='ProfileAPIVewSet'), super().get_object(), settings.CACHE_LIVE_TIME)
         return instance
 
     def update(self, request, *args, **kwargs):
         response = super().update(request, *args, **kwargs)
         user = self.kwargs.get('pk')
-        cache_key = settings.USER_PROFILE_CACHE_KEY.format(user=user)
+        cache_key = settings.USER_PROFILE_VIEW_CACHE_KEY.format(
+            user=user, view='ProfileAPIVewSet')
         cache.delete(cache_key)
         return response
 
@@ -55,7 +53,8 @@ class ProfileAPIVewSet(GenericViewSet, RetrieveModelMixin, UpdateModelMixin):
             'departments', None)) for user in response_data]
         emails = [user.get('email', None) for user in response_data]
 
-        users = User.objects.filter(email__in=emails).prefetch_related('links')
+        users = cache.get_or_set(settings.USER_PROFILE_VIEW_CACHE_KEY.format(user='any_for_company', view='ProfileAPIVewSet'), User.objects.filter(
+            email__in=emails).prefetch_related('links'), settings.CACHE_LIVE_TIME)
         context = {'emails': emails, 'pos_deps': users_pos_deps}
         users_info = ProfileUserForCompanySerializer(
             users, many=True, context=context)
@@ -72,7 +71,8 @@ class ProfileAPIVewSet(GenericViewSet, RetrieveModelMixin, UpdateModelMixin):
         department_data = response.json()
 
         users_emails = [user['email'] for user in department_data['users']]
-        users = User.objects.filter(email__in=users_emails)
+        users = cache.get_or_set(settings.USER_PROFILE_VIEW_CACHE_KEY.format(user='any_for_dep', view='ProfileAPIVewSet'), User.objects.filter(
+            email__in=users_emails), settings.CACHE_LIVE_TIME)
         users_info = [model_to_dict(
             user, fields=ProfileUserForDepSerializer.Meta.fields) for user in users]
 
@@ -99,7 +99,8 @@ class ProfileAPIVewSet(GenericViewSet, RetrieveModelMixin, UpdateModelMixin):
         for department in departments_data:
             for user in department['users']:
                 users_emails.append(user['email'])
-        users = User.objects.filter(email__in=users_emails)
+        users = cache.get_or_set(settings.USER_PROFILE_VIEW_CACHE_KEY.format(user='any_for_deps', view='ProfileAPIVewSet'), User.objects.filter(
+            email__in=users_emails), settings.CACHE_LIVE_TIME)
         users_info = [model_to_dict(
             user, fields=ProfileUserForDepSerializer.Meta.fields) for user in users]
 
@@ -154,7 +155,8 @@ class ProfileCompanyAPIView(ListAPIView):
 
     def get_queryset(self):
         emails = self.request.data.get('emails', [])
-        return User.objects.prefetch_related('links').filter(email__in=emails).only(
+        users = cache.get_or_set(settings.USER_PROFILE_VIEW_CACHE_KEY.format(user='any', view='ProfileCompanyAPIView'), User.objects.prefetch_related('links').filter(email__in=emails).only(
             'id', 'first_name', 'last_name',
             'phone', 'image_identifier', 'date_joined', 'links'
-        )
+        ), settings.CACHE_LIVE_TIME)
+        return users

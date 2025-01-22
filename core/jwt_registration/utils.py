@@ -5,7 +5,6 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.conf import settings
 from core.exeptions import TwoCommitsError
 import requests
-from typing import Literal
 
 
 class TwoCommitsPatternBase:

@@ -24,14 +24,17 @@ class ProfileAPIViewSetTestCase(Settings):
     def setUp(self):
         self.profile_url = reverse('user-detail', args=[self.user.id])
         self.refresh = RefreshToken.for_user(self.user)
+        cache.clear()
 
     def user_login(self):
         client = APIClient()
-        client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.refresh.access_token}')
+        client.credentials(HTTP_AUTHORIZATION=f'Bearer {
+                           self.refresh.access_token}')
         return client
 
     def test_retrieve_with_cache(self):
-        cache_key = settings.USER_PROFILE_CACHE_KEY.format(user=self.user.pk)
+        cache_key = settings.USER_PROFILE_VIEW_CACHE_KEY.format(
+            user=self.user.pk, view='ProfileAPIVewSet')
         cache.delete(cache_key)
         client = self.user_login()
         client.get(self.profile_url)
@@ -39,21 +42,27 @@ class ProfileAPIViewSetTestCase(Settings):
 
     def test_update_invalidate_cache(self):
         client = self.user_login()
-        cache_key = settings.USER_PROFILE_CACHE_KEY.format(user=self.user.pk)
-        client.get(self.profile_url)
-        self.assertIsNotNone(cache.get(cache_key))
+        response_retr = client.get(
+            reverse('user-detail', kwargs={'pk': self.user.id}))
+        self.assertIsNotNone(cache.get(settings.USER_PROFILE_VIEW_CACHE_KEY.format(
+            user=self.user.id, view='ProfileAPIVewSet')))
         update_data = {'email': 'updateduser@gmail.com'}
         response = client.patch(self.profile_url, update_data, format='json')
-        self.assertIsNone(cache.get(cache_key))
+        self.assertIsNone(cache.get(settings.USER_PROFILE_VIEW_CACHE_KEY.format(
+            user=self.user.id, view='ProfileAPIVewSet')))
 
     def test_authenticated_user(self):
         client = self.user_login()
         response = client.get(self.profile_url)
+        self.assertIsNotNone(cache.get(settings.USER_PROFILE_VIEW_CACHE_KEY.format(
+            user=self.user.id, view='ProfileAPIVewSet')))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_not_authenticated_user(self):
         client = APIClient()
         response = client.get(self.profile_url)
+        self.assertIsNone(cache.get(settings.USER_PROFILE_VIEW_CACHE_KEY.format(
+            user=self.user.id, view='ProfileAPIVewSet')))
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     @patch('user_profile.views.requests.get')
@@ -107,6 +116,8 @@ class ProfileAPIViewSetTestCase(Settings):
         with self.assertNumQueries(3):
             response = client.get(settings.REGISTRATION_SERVICE_URL + reverse(
                 'user-get_users_by_company', kwargs={"company_pk": 1}), HTTP_HOST='127.0.0.1')
+            self.assertIsNotNone(cache.get(settings.USER_PROFILE_VIEW_CACHE_KEY.format(
+                user='any_for_company', view='ProfileAPIVewSet')))
             response.data[0].pop('id')
             self.assertEqual(users_expected, response.data)
 
@@ -155,6 +166,8 @@ class ProfileAPIViewSetTestCase(Settings):
         response = client.get(settings.REGISTRATION_SERVICE_URL + reverse('user-get_users_by_dep',
                                                                           kwargs={"company_pk": 1, 'dep_pk': 1}),
                               HTTP_HOST='127.0.0.1')
+        self.assertIsNotNone(cache.get(settings.USER_PROFILE_VIEW_CACHE_KEY.format(
+            user='any_for_dep', view='ProfileAPIVewSet')))
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, data_expected)
@@ -208,6 +221,8 @@ class ProfileAPIViewSetTestCase(Settings):
         response = client.get(settings.REGISTRATION_SERVICE_URL + reverse('user-get_users_by_deps',
                                                                           kwargs={"company_pk": 1}),
                               HTTP_HOST='127.0.0.1')
+        self.assertIsNotNone(cache.get(settings.USER_PROFILE_VIEW_CACHE_KEY.format(
+            user='any_for_deps', view='ProfileAPIVewSet')))
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, data_expected)
@@ -239,7 +254,8 @@ class UpdateImportantDataAPIViewTestCase(APITestCase):
     def user_login(self):
         client = APIClient()
         client.force_login(self.user)
-        client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.refresh.access_token}')
+        client.credentials(HTTP_AUTHORIZATION=f'Bearer {
+                           self.refresh.access_token}')
         return client
 
     def test_successful_post_request(self, mock_upload_file):
