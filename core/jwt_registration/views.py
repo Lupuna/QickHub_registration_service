@@ -179,8 +179,6 @@ class EmailVerifyView(APIView):
 
 
 class IsEmailVerifiedView(APIView):
-    permission_classes = (IsAuthenticated, )
-
     @extend_schema(request=request_for_is_email_verified, responses=response_for_is_email_verified)
     def get(self, request, token):
         try:

@@ -22,8 +22,8 @@ from user_profile.serializers import ProfileUserSerializer, ImageSerializer, Pro
 
 class ProfileAPIVewSet(GenericViewSet, RetrieveModelMixin, UpdateModelMixin):
     serializer_class = ProfileUserSerializer
-    queryset = cache.get_or_set(settings.USER_PROFILE_VIEW_CACHE_KEY.format(user='all', view='ProfileAPIVewSet'), User.objects.all(
-    ).select_related('customization', 'reminder', 'notification').prefetch_related('links'), settings.CACHE_LIVE_TIME)
+    queryset = User.objects.all().select_related('customization', 'reminder',
+                                                 'notification').prefetch_related('links')
     permission_classes = (IsAuthenticated,)
 
     def get_object(self):
