@@ -23,9 +23,9 @@ jobs:
     - name: Run docker-compose
       run: |
         docker compose -f docker-compose.yml build
-    - name: Start Redis
+    - name: Start Redis and Database
       run: |
-        docker compose -f docker-compose.yml up -d redis
+        docker compose -f docker-compose.yml up -d redis database
     - name: Make Migrations
       run: |
         docker compose -f docker-compose.yml run --rm web-app sh -c "python manage.py makemigrations"
@@ -35,6 +35,6 @@ jobs:
     - name: Run Tests
       run: |
         docker compose -f docker-compose.yml run --rm web-app sh -c "python manage.py test"
-    - name: Stop Redis
+    - name: Stop Services
       run: |
-        docker compose -f docker-compose.yml stop redis
+        docker compose -f docker-compose.yml down
