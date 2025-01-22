@@ -26,6 +26,12 @@ jobs:
     - name: Start Redis and Database
       run: |
         docker compose -f docker-compose.yml up -d redis database
+    - name: Wait for PostgreSQL
+      run: |
+        until docker compose exec database pg_isready -U dbuser; do
+          echo "Waiting for PostgreSQL to start..."
+          sleep 5
+        done
     - name: Make Migrations
       run: |
         docker compose -f docker-compose.yml run --rm web-app sh -c "python manage.py makemigrations"
