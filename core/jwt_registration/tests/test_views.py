@@ -9,6 +9,8 @@ from itsdangerous import BadSignature, SignatureExpired
 from freezegun import freeze_time
 from django.utils import timezone
 from django.conf import settings
+from django.core.cache import cache
+from django.conf import settings
 
 
 class RegistrationAPITestCase(APITestCase):
@@ -138,6 +140,7 @@ class EmailVerifyTestCase(APITestCase):
         self.client = APIClient()
         self.url = settings.REGISTRATION_SERVICE_URL + \
             reverse('to_email_verify')
+        cache.clear()
 
     @patch('jwt_registration.tasks.send_celery_mail.delay')
     def test_email_verify_successful(self, mock_send_mail):
@@ -145,6 +148,8 @@ class EmailVerifyTestCase(APITestCase):
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {
                                 refresh.access_token}')
         response = self.client.post(self.url, self.data_to_post)
+        self.assertIsNotNone(cache.get(settings.JWT_REG_SERIALIZERS_CACHE_KEY.format(
+            email=self.data_to_post['email'], ser='EmailVerifySerializer')))
 
         mock_send_mail.assert_called_once()
         args, kwargs = mock_send_mail.call_args
@@ -159,6 +164,8 @@ class EmailVerifyTestCase(APITestCase):
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {
                                 refresh.access_token}')
         response = self.client.get(verification_url)
+        self.assertIsNotNone(
+            cache.get(settings.JWT_REG_VIEW_CACHE_KEY.format(email=self.data_to_post['email'], view='IsEmailVerifiedView')))
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
@@ -174,6 +181,8 @@ class EmailVerifyTestCase(APITestCase):
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {
                                 refresh.access_token}')
         response = self.client.post(self.url, self.data_to_post)
+        self.assertIsNotNone(cache.get(settings.JWT_REG_SERIALIZERS_CACHE_KEY.format(
+            email=self.data_to_post['email'], ser='EmailVerifySerializer')))
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
@@ -185,6 +194,8 @@ class EmailVerifyTestCase(APITestCase):
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {
                                 refresh.access_token}')
         response = self.client.post(self.url, self.data_to_post)
+        self.assertIsNotNone(cache.get(settings.JWT_REG_SERIALIZERS_CACHE_KEY.format(
+            email=self.data_to_post['email'], ser='EmailVerifySerializer')))
 
         args, kwargs = mock_send_mail.call_args
 
@@ -196,6 +207,8 @@ class EmailVerifyTestCase(APITestCase):
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {
                                 refresh.access_token}')
         response = self.client.get(url_with_invalid_token)
+        self.assertIsNone(
+            cache.get(settings.JWT_REG_VIEW_CACHE_KEY.format(email=self.data_to_post['email'], view='IsEmailVerifiedView')))
 
         self.assertEqual(response.status_code, 406)
         self.assertEqual(response.data, {'error': 'Invalid token'})
@@ -216,6 +229,8 @@ class EmailVerifyTestCase(APITestCase):
             self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {
                 refresh.access_token}')
             response = self.client.get(verification_url)
+            self.assertIsNone(
+                cache.get(settings.JWT_REG_VIEW_CACHE_KEY.format(email=self.data_to_post['email'], view='IsEmailVerifiedView')))
 
             self.assertEqual(response.status_code, 406)
             self.assertEqual(response.data, {'error': 'Token expired'})
@@ -227,6 +242,8 @@ class EmailVerifyTestCase(APITestCase):
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {
                                 refresh.access_token}')
         response = self.client.post(self.url, self.data_to_post)
+        self.assertIsNone(
+            cache.get(settings.JWT_REG_VIEW_CACHE_KEY.format(email=self.data_to_post['email'], view='EmailVerifySerializer')))
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
@@ -244,6 +261,7 @@ class PasswordRecoveryTestCase(APITestCase):
         self.send_mail_url = settings.REGISTRATION_SERVICE_URL + \
             reverse('password_recovery')
         self.client = APIClient()
+        cache.clear()
 
     @patch('jwt_registration.tasks.send_celery_mail.delay')
     def test_send_email(self, mock_send_mail):
@@ -265,6 +283,8 @@ class PasswordRecoveryTestCase(APITestCase):
     @patch('jwt_registration.tasks.send_celery_mail.delay')
     def test_set_new_password_OK(self, mock_send_mail):
         response = self.client.post(self.send_mail_url, self.data_to_post)
+        self.assertIsNotNone(
+            cache.get(settings.JWT_REG_VIEW_CACHE_KEY.format(email=self.data_to_post['email'], view='PasswordRecoveryMailAPIView')))
 
         args, kwargs = mock_send_mail.call_args
         reset_pas_url = kwargs['message'].split()[-1]
@@ -281,11 +301,15 @@ class PasswordRecoveryTestCase(APITestCase):
     @patch('jwt_registration.tasks.send_celery_mail.delay')
     def test_set_new_password_BAD(self, mock_send_mail):
         response = self.client.post(self.send_mail_url, self.data_to_post)
+        self.assertIsNotNone(
+            cache.get(settings.JWT_REG_VIEW_CACHE_KEY.format(email=self.data_to_post['email'], view='PasswordRecoveryMailAPIView')))
 
         args, kwargs = mock_send_mail.call_args
         reset_pas_url = kwargs['message'].split()[-1]
         self.password_to_post.update({'pas2': 'asaspdaf94'})
         response = self.client.post(reset_pas_url, self.password_to_post)
+        self.assertIsNone(cache.get(settings.JWT_REG_SERIALIZERS_CACHE_KEY.format(
+            email=self.data_to_post['email'], ser='SetNewPasswordSerializer')))
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.data, {'error': 'Incorrect data'})
@@ -293,6 +317,8 @@ class PasswordRecoveryTestCase(APITestCase):
     @patch('jwt_registration.tasks.send_celery_mail.delay')
     def test_invalid_token(self, mock_send_mail):
         response = self.client.post(self.send_mail_url, self.data_to_post)
+        self.assertIsNotNone(
+            cache.get(settings.JWT_REG_VIEW_CACHE_KEY.format(email=self.data_to_post['email'], view='PasswordRecoveryMailAPIView')))
 
         args, kwargs = mock_send_mail.call_args
         reset_pas_url = kwargs['message'].split()[-1]
@@ -300,6 +326,8 @@ class PasswordRecoveryTestCase(APITestCase):
             reset_pas_url.split('/')[:-2]) + '/fasdfasd/'
         response = self.client.post(
             url_with_invalid_token, self.password_to_post)
+        self.assertIsNone(
+            cache.get(settings.JWT_REG_VIEW_CACHE_KEY.format(email=self.data_to_post['email'], view='PasswordRecoveryConfirmAPIView')))
 
         self.assertEqual(response.status_code, 406)
         self.assertEqual(response.data, {'error': 'Invalid token'})
@@ -307,6 +335,8 @@ class PasswordRecoveryTestCase(APITestCase):
     @patch('jwt_registration.tasks.send_celery_mail.delay')
     def test_token_expired(self, mock_send_mail):
         response = self.client.post(self.send_mail_url, self.data_to_post)
+        self.assertIsNotNone(
+            cache.get(settings.JWT_REG_VIEW_CACHE_KEY.format(email=self.data_to_post['email'], view='PasswordRecoveryMailAPIView')))
 
         args, kwargs = mock_send_mail.call_args
         reset_pas_url = kwargs['message'].split()[-1]
@@ -314,6 +344,9 @@ class PasswordRecoveryTestCase(APITestCase):
         with freeze_time(timezone.now()+timezone.timedelta(hours=2)):
             response = self.client.post(
                 reset_pas_url, self.password_to_post)
+            self.assertIsNone(
+                cache.get(settings.JWT_REG_VIEW_CACHE_KEY.format(email=self.data_to_post['email'], view='PasswordRecoveryConfirmAPIView')))
+
             self.assertEqual(response.status_code, 406)
             self.assertEqual(response.data, {'error': 'Token expired'})
 
@@ -328,6 +361,7 @@ class EmailUpdateAPIViewTestCase(APITestCase):
         }
         self.client = APIClient()
         self.url = reverse('email_update')
+        cache.clear()
 
     @patch('jwt_registration.views.UpdateTwoCommitsPattern.two_commits_operation')
     def test_email_update(self, mock_two_commits):
@@ -344,6 +378,8 @@ class EmailUpdateAPIViewTestCase(APITestCase):
         mock_two_commits.return_value = {'company': 200}
 
         response = self.client.post(self.url, data=self.data)
+        self.assertIsNotNone(cache.get(settings.JWT_REG_SERIALIZERS_CACHE_KEY.format(
+            email=self.data['new_email'], ser='EmailUpdateSerializer')))
         mock_two_commits.assert_called_once()
         user = User.objects.get(email='new@gmail.com')
         self.assertEqual(response.status_code, 200)

@@ -1,4 +1,3 @@
-import requests
 from django.contrib.auth import authenticate
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
@@ -6,20 +5,18 @@ from rest_framework.exceptions import ValidationError, AuthenticationFailed
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
-from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
-
+from rest_framework_simplejwt.tokens import RefreshToken
 from core.swagger_info import *
 from jwt_registration.serializers import RegistrationSerializer, EmailVerifySerializer, SetNewPasswordSerializer, EmailUpdateSerializer
 from jwt_registration.utils import put_token_on_blacklist, CreateTwoCommitsPattern, UpdateTwoCommitsPattern
 from django.db import transaction
-from django.core.mail import send_mail
 from django.conf import settings
 from django.urls import reverse
 from django.shortcuts import redirect
 from user_profile.models import User
 from jwt_registration.tasks import send_celery_mail
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
+from django.core.cache import cache
 
 
 class RegistrationAPIView(APIView):
@@ -96,7 +93,8 @@ class PasswordRecoveryMailAPIView(APIView):
             return Response({'error': 'Provide email adress for sending mail with password recovery instructions'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            user = User.objects.get(email=user_email)
+            user = cache.get_or_set(settings.JWT_REG_VIEW_CACHE_KEY.format(email=user_email, view='PasswordRecoveryMailAPIView'), User.objects.get(
+                email=user_email), settings.CACHE_LIVE_TIME)
         except User.DoesNotExist:
             return Response({'error': 'Incorrect email'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -142,7 +140,8 @@ class PasswordRecoveryConfirmAPIView(APIView):
         serializer = SetNewPasswordSerializer(data=data)
         if serializer.is_valid():
             new_password = serializer.validated_data['password']
-            user = User.objects.get(email=user_email)
+            user = cache.get_or_set(settings.JWT_REG_VIEW_CACHE_KEY.format(
+                email=user_email, view='PasswordRecoveryConfirmAPIView'), User.objects.get(email=user_email), settings.CACHE_LIVE_TIME)
             user.set_password(new_password)
             user.save()
             return Response({'detail': 'Password recovered successfully'}, status=status.HTTP_200_OK)
@@ -180,8 +179,6 @@ class EmailVerifyView(APIView):
 
 
 class IsEmailVerifiedView(APIView):
-    permission_classes = (IsAuthenticated, )
-
     @extend_schema(request=request_for_is_email_verified, responses=response_for_is_email_verified)
     def get(self, request, token):
         try:
@@ -195,7 +192,8 @@ class IsEmailVerifiedView(APIView):
             return Response({'error': 'Invalid token'}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
         user_email = decoded_token['user_email']
-        user = User.objects.get(email=user_email)
+        user = cache.get_or_set(settings.JWT_REG_VIEW_CACHE_KEY.format(email=user_email, view='IsEmailVerifiedView'), User.objects.get(
+            email=user_email), settings.CACHE_LIVE_TIME)
 
         user.email_verified = True
         user.save()

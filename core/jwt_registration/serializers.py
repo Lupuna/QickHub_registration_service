@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from user_profile.models import User, Customization
 from jwt_registration.custom_validators import password_validating
+from django.core.cache import cache
+from django.conf import settings
 
 
 class RegistrationSerializer(serializers.ModelSerializer):
@@ -55,7 +57,9 @@ class SetNewPasswordSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 'Please enter password correctly')
 
-        if not User.objects.filter(email=email).exists():
+        user_exists = cache.get_or_set(settings.JWT_REG_SERIALIZERS_CACHE_KEY.format(
+            email=email, ser='SetNewPasswordSerializer'), User.objects.filter(email=email).exists(), settings.CACHE_LIVE_TIME)
+        if not user_exists:
             raise serializers.ValidationError('Email was not find')
 
         return data
@@ -64,7 +68,9 @@ class SetNewPasswordSerializer(serializers.Serializer):
 class EmailVerifySerializer(SetNewPasswordSerializer):
     def validate(self, data):
         data = super().validate(data)
-        if User.objects.get(email=data['email']).email_verified:
+        user_email_verified = cache.get_or_set(settings.JWT_REG_SERIALIZERS_CACHE_KEY.format(
+            email=data['email'], ser='EmailVerifySerializer'), User.objects.get(email=data['email']).email_verified, settings.CACHE_LIVE_TIME)
+        if user_email_verified:
             raise serializers.ValidationError('Email is already verified')
 
         return data
@@ -86,7 +92,9 @@ class EmailUpdateSerializer(serializers.ModelSerializer):
         if not password_validating(password, password2):
             raise serializers.ValidationError(
                 'Please enter password correctly')
-        if User.objects.filter(email=new_email).exists():
+        user_exists = cache.get_or_set(settings.JWT_REG_SERIALIZERS_CACHE_KEY.format(
+            email=new_email, ser='EmailUpdateSerializer'), User.objects.filter(email=new_email).exists(), settings.CACHE_LIVE_TIME)
+        if user_exists:
             raise serializers.ValidationError('Email already exists')
 
         return data
